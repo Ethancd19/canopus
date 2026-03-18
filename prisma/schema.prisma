@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Photo {
+  id String @id @default(cuid())
+  title String
+  slug String @unique
+  cloudinaryId String
+  format Format
+  tags String[]
+  featured Boolean @default(false)
+  order Int @default(0)
+  width Int
+  height Int
+  aspectRatio Float
+  caption String?
+  location String?
+  takenAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Format {
+  DIGITAL
+  FILM_35MM
+  FILM_120MM
+}
