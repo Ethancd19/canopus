@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "@/types/photo";
+import { ScrambleText } from "motion-plus/react";
 
 type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
 
@@ -23,6 +24,50 @@ const ALL_GENRES = [
   "Street",
   "Portrait",
 ] as const;
+
+const EMPTY_MESSAGES = [
+  "Nothing is here just yet... but something's coming!",
+  "This category is still being developed. Literally.",
+  "The shutter is closed on this one for now. Check back later!",
+  "Blank frame. Give it some time to develop!",
+  "Not yet captured. The light wasn't right.",
+  "This one's still in the darkroom. Stay tuned!",
+  "Filed under: soon™",
+  "This category is still loading... must be a really long exposure.",
+  "The film is still rolling on this one. Check back soon!",
+  "This section is still being composed. Patience is a virtue!",
+  "Patience, young padawan. This category is still being formed.",
+  "Zero photos here yet. The photographer is aware and honestly a bit embarrassed.",
+  "Even the tumbleweeds are taking a break here.",
+  "Still loading... just kidding, there are actually no photos here yet. But soon!",
+  "Lens cap was on... We don't talk about it.",
+  "Currently vibes only. No photos have been captured here yet.",
+  "Nothing to see here... Which is ironic, for a photography site.",
+];
+
+const CHEEKY_MESSAGES = [
+  "There's still nothing... Are you testing me?",
+  "Yep, still nothing. The suspense is killing me too.",
+  "You're really committed to finding something that isn't there, huh?",
+  "I admire your dedication to this fruitless quest.",
+  "At this point, you might as well just stare at the wall. It has about as much content as this section.",
+  "Okay seriously, it's just empty. Maybe go outside or something?",
+  "Okay at this point I'm starting to feel bad for you. There's really nothing here.",
+  "The photographer has been notified of your persistence.",
+  "Bold strategy. Still empty though.",
+  "This is a test of willpower. You are doing... fine, I guess?",
+  "I see you. Still nothing here, but I see you.",
+  "Dang, you really want what I don't have...",
+  "This is getting a bit awkward, isn't it?",
+  "Okay fine... I'll tell the photographer to get out more.",
+];
+
+function pickRandom(pool: string[], history: string[], avoidCount = 3): string {
+  const recent = history.slice(-avoidCount);
+  const available = pool.filter((msg) => !recent.includes(msg));
+  const source = available.length > 0 ? available : pool;
+  return source[Math.floor(Math.random() * source.length)];
+}
 
 function cloudinaryUrl(id: string, width = 800) {
   const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -140,15 +185,24 @@ function ExifBar({ photo }: { photo: Photo }) {
 
 function PhotoCard({
   photo,
+  index,
   onClick,
 }: {
   photo: Photo;
+  index: number;
   onClick: (p: Photo) => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{
+        duration: 0.5,
+        delay: index * 0.035,
+        ease: [0.4, 0, 0.2, 1],
+      }}
       layout
       onClick={() => onClick(photo)}
       onMouseEnter={() => setHovered(true)}
@@ -166,7 +220,7 @@ function PhotoCard({
           position: "relative",
         }}
       >
-        <img
+        <motion.img
           src={cloudinaryUrl(photo.cloudinaryId)}
           alt={photo.title}
           loading="lazy"
@@ -202,7 +256,7 @@ function PhotoCard({
           {FORMAT_LABELS[photo.format]}
         </div>
 
-        {/* EXIF overlay — lives on the image */}
+        {/* EXIF overlay */}
         <AnimatePresence>
           {hovered && <ExifBar photo={photo} />}
         </AnimatePresence>
@@ -295,7 +349,7 @@ function ExpandedPhoto({
           border: "0.5px solid rgba(255,255,255,0.07)",
         }}
       >
-        {/* ── Image side ── */}
+        {/* Image side */}
         <div
           style={{
             position: "relative",
@@ -307,7 +361,6 @@ function ExpandedPhoto({
             minWidth: "30vw",
           }}
         >
-          {/* Loading placeholder */}
           {!loaded && (
             <span
               style={{
@@ -338,7 +391,7 @@ function ExpandedPhoto({
           />
         </div>
 
-        {/* ── Info panel — slides in from right ── */}
+        {/* Info panel */}
         <motion.div
           initial={{ x: 32, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -355,7 +408,6 @@ function ExpandedPhoto({
             background: "#0D0F11",
           }}
         >
-          {/* Title + location */}
           <div>
             <h2
               style={{
@@ -384,7 +436,6 @@ function ExpandedPhoto({
             )}
           </div>
 
-          {/* Caption */}
           {photo.caption && (
             <p
               style={{
@@ -400,7 +451,6 @@ function ExpandedPhoto({
             </p>
           )}
 
-          {/* EXIF data */}
           <div
             style={{
               borderTop: "0.5px solid rgba(255,255,255,0.06)",
@@ -455,7 +505,6 @@ function ExpandedPhoto({
             )}
           </div>
 
-          {/* Tags */}
           {photo.tags.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
               {photo.tags.map((tag) => (
@@ -477,7 +526,6 @@ function ExpandedPhoto({
             </div>
           )}
 
-          {/* Close button */}
           <button
             onClick={onClose}
             style={{
@@ -518,6 +566,15 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
   const [activeFormat, setActiveFormat] = useState<string>("All");
   const [activeGenre, setActiveGenre] = useState<string>("All");
 
+  const messageHistoryRef = useRef<string[]>([]);
+  const consecutiveEmptyRef = useRef(0);
+  const [currentMessage, setCurrentMessage] = useState<string>("");
+  useEffect(() => {
+    const msg = pickRandom(EMPTY_MESSAGES, [], 0);
+    messageHistoryRef.current = [msg];
+    setCurrentMessage(msg);
+  }, []);
+
   const filtered = photos.filter((p) => {
     const fmtMatch =
       activeFormat === "All" || FORMAT_LABELS[p.format] === activeFormat;
@@ -526,6 +583,48 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
       p.tags.map((t) => t.toLowerCase()).includes(activeGenre.toLowerCase());
     return fmtMatch && genreMatch;
   });
+
+  const handleFilterChange = (isEmpty: boolean) => {
+    if (isEmpty) {
+      consecutiveEmptyRef.current += 1;
+      const pool =
+        consecutiveEmptyRef.current > 2 ? CHEEKY_MESSAGES : EMPTY_MESSAGES;
+      const msg = pickRandom(pool, messageHistoryRef.current, 3);
+      messageHistoryRef.current = [...messageHistoryRef.current, msg];
+      setCurrentMessage(msg);
+    } else {
+      consecutiveEmptyRef.current = 0;
+    }
+  };
+
+  const handleFormatChange = (fmt: string) => {
+    setActiveFormat(fmt);
+    const willBeEmpty =
+      photos.filter((p) => {
+        const fmtMatch = fmt === "All" || FORMAT_LABELS[p.format] === fmt;
+        const genreMatch =
+          activeGenre === "All" ||
+          p.tags
+            .map((t) => t.toLowerCase())
+            .includes(activeGenre.toLowerCase());
+        return fmtMatch && genreMatch;
+      }).length === 0;
+    handleFilterChange(willBeEmpty);
+  };
+
+  const handleGenreChange = (genre: string) => {
+    setActiveGenre(genre);
+    const willBeEmpty =
+      photos.filter((p) => {
+        const fmtMatch =
+          activeFormat === "All" || FORMAT_LABELS[p.format] === activeFormat;
+        const genreMatch =
+          genre === "All" ||
+          p.tags.map((t) => t.toLowerCase()).includes(genre.toLowerCase());
+        return fmtMatch && genreMatch;
+      }).length === 0;
+    handleFilterChange(willBeEmpty);
+  };
 
   return (
     <>
@@ -551,7 +650,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
           {ALL_FORMATS.map((fmt) => (
             <button
               key={fmt}
-              onClick={() => setActiveFormat(fmt)}
+              onClick={() => handleFormatChange(fmt)}
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "10px",
@@ -580,7 +679,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
           {ALL_GENRES.map((genre) => (
             <button
               key={genre}
-              onClick={() => setActiveGenre(genre)}
+              onClick={() => handleGenreChange(genre)}
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",
@@ -601,37 +700,80 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
         </div>
       </div>
 
-      {/* ── Masonry grid ── */}
-      <motion.div
-        layout
-        style={{
-          columns: "var(--gallery-cols, 3)",
-          columnGap: "3px",
-        }}
-      >
-        <style>{`
-          @media (max-width: 1024px) { :root { --gallery-cols: 2; } }
-          @media (max-width: 640px)  { :root { --gallery-cols: 1; } }
-        `}</style>
-
-        <AnimatePresence>
-          {filtered.map((photo, i) => (
-            <motion.div
-              key={photo.id}
-              layout
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }}
-              style={{ marginBottom: "3px", breakInside: "avoid" }}
+      <AnimatePresence mode="wait">
+        {filtered.length === 0 ? (
+          <motion.div
+            key={`empty-${currentMessage}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            style={{
+              padding: "5rem 2rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "0.75rem",
+              textAlign: "center",
+            }}
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
+                fontWeight: 300,
+                fontStyle: "italic",
+                color: "rgba(240,242,244,0.45)",
+                lineHeight: 1.5,
+              }}
             >
-              <PhotoCard photo={photo} onClick={(p) => setActivePhoto(p)} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+              {currentMessage && (
+                <ScrambleText key={currentMessage}>
+                  {currentMessage}
+                </ScrambleText>
+              )}
+            </p>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "9px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(240,242,244,0.25)",
+              }}
+            >
+              Check back soon
+            </span>
+          </motion.div>
+        ) : (
+          <motion.div
+            layout
+            style={{
+              columns: "var(--gallery-cols, 3)",
+              columnGap: "3px",
+            }}
+          >
+            <style>{`
+                    @media (max-width: 1024px) { :root { --gallery-cols: 2; } }
+                    @media (max-width: 640px)  { :root { --gallery-cols: 1; } }
+                    `}</style>
 
-      {/* ── Expanded modal ── */}
+            {filtered.map((photo, i) => (
+              <div
+                key={photo.id}
+                style={{ marginBottom: "3px", breakInside: "avoid" }}
+              >
+                <PhotoCard
+                  photo={photo}
+                  index={i}
+                  onClick={(p) => setActivePhoto(p)}
+                />
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {activePhoto && (
           <ExpandedPhoto

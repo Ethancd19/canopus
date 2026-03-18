@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useCallback, use } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
-import { image } from "motion/react-client";
 
 type ExifData = {
   camera?: string;

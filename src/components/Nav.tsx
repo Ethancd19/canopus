@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 
 const links = [
-  { label: "Work", href: "/" },
+  { label: "Work", href: "/work" },
   { label: "Behind", href: "/behind" },
   { label: "Contact", href: "/contact" },
 ];
