@@ -21,6 +21,19 @@ model Photo {
   caption String?
   location String?
   takenAt DateTime?
+
+  // Digital EXIF
+  camera       String?
+  lens         String?
+  focalLength  String?
+  aperture     String?
+  shutterSpeed String?
+  iso          String?
+
+  // Film specific
+  filmStock    String?
+  filmFormat   String?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
