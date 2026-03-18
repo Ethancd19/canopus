@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "@/types/photo";
-import type { Format } from "@prisma/client";
+
+type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
 
 const FORMAT_LABELS: Record<Format, string> = {
   DIGITAL: "Digital",
