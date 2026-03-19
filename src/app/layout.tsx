@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     url: "https://bycanopus.com",
     siteName: "Canopus",
   },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

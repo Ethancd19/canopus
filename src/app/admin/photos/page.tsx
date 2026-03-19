@@ -77,7 +77,7 @@ const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
   border: "0.5px solid rgba(255,255,255,0.1)",
   padding: "0.5rem 0.65rem",
-  color: "#F0F2F4",
+  color: "#B8C4D0",
   fontFamily: "var(--font-mono)",
   fontSize: "11px",
   outline: "none",
@@ -246,7 +246,7 @@ function PhotoRow({
               fontFamily: "var(--font-serif)",
               fontSize: "14px",
               fontWeight: 300,
-              color: "#F0F2F4",
+              color: "#B8C4D0",
               marginBottom: "2px",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -382,7 +382,7 @@ function PhotoRow({
                   marginBottom: "0.4rem",
                 }}
                 onMouseEnter={(e) =>
-                  !aiLoading && (e.currentTarget.style.color = "#F0F2F4")
+                  !aiLoading && (e.currentTarget.style.color = "#B8C4D0")
                 }
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.color = aiLoading
@@ -688,7 +688,7 @@ function PhotoRow({
                         ? "#5DBB8A"
                         : saveStatus === "error"
                           ? "#E07070"
-                          : "#F0F2F4",
+                          : "#B8C4D0",
                     cursor: saving ? "not-allowed" : "pointer",
                     transition: "all 0.2s",
                   }}
@@ -758,9 +758,9 @@ export default function AdminPhotosPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#080A0C",
+        background: "#0E1824",
         padding: "2rem",
-        color: "#F0F2F4",
+        color: "#B8C4D0",
       }}
     >
       <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
@@ -854,7 +854,7 @@ export default function AdminPhotosPage() {
                 fontSize: "9px",
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: filter === f ? "#F0F2F4" : "rgba(240,242,244,0.35)",
+                color: filter === f ? "#B8C4D0" : "rgba(240,242,244,0.35)",
                 textDecoration: "none",
                 padding: "0.5rem 0.85rem",
                 border: `0.5px solid ${filter === f ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)"}`,

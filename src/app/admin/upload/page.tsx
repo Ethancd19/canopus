@@ -233,9 +233,9 @@ export default function UploadPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#080A0C",
+        background: "#0E1824",
         padding: "2rem",
-        color: "#F0F2F4",
+        color: "#B8C4D0",
       }}
     >
       <div style={{ maxWidth: "900px", margin: "0 auto" }}>
@@ -398,7 +398,7 @@ export default function UploadPage() {
                 padding: "0.85rem",
                 background: "rgba(240,242,244,0.08)",
                 border: "0.5px solid rgba(255,255,255,0.15)",
-                color: "#F0F2F4",
+                color: "#B8C4D0",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
@@ -674,7 +674,7 @@ export default function UploadPage() {
                     ? "rgba(93,187,138,0.3)"
                     : "rgba(255,255,255,0.15)"
                 }`,
-                color: state === "done" ? "#5DBB8A" : "#F0F2F4",
+                color: state === "done" ? "#5DBB8A" : "#B8C4D0",
                 cursor: state === "saving" ? "not-allowed" : "pointer",
                 transition: "all 0.2s",
               }}
@@ -710,7 +710,7 @@ const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
   border: "0.5px solid rgba(255,255,255,0.1)",
   padding: "0.6rem 0.75rem",
-  color: "#F0F2F4",
+  color: "#B8C4D0",
   fontFamily: "var(--font-mono)",
   fontSize: "12px",
   outline: "none",

@@ -7,7 +7,7 @@ import { Photo } from "@/types/photo";
 
 export default function WorkClient({ photos }: { photos: Photo[] }) {
   return (
-    <div style={{ background: "#080A0C", minHeight: "100vh" }}>
+    <div style={{ background: "#0E1824", minHeight: "100vh" }}>
       <Nav visible={true} />
 
       <section
@@ -27,7 +27,7 @@ export default function WorkClient({ photos }: { photos: Photo[] }) {
               fontSize: "10px",
               letterSpacing: "0.25em",
               textTransform: "uppercase",
-              color: "rgba(240,242,244,0.5)",
+              color: "#B87333",
               marginBottom: "0.5rem",
             }}
           >
@@ -38,7 +38,7 @@ export default function WorkClient({ photos }: { photos: Photo[] }) {
               fontFamily: "var(--font-serif)",
               fontSize: "clamp(2.5rem, 5vw, 4rem)",
               fontWeight: 300,
-              color: "#F0F2F4",
+              color: "#D4DCE8",
               letterSpacing: "0.05em",
               marginBottom: "3rem",
               lineHeight: 1,

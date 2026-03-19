@@ -117,7 +117,7 @@ const inputStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
   border: "0.5px solid rgba(255,255,255,0.1)",
   padding: "0.5rem 0.65rem",
-  color: "#F0F2F4",
+  color: "#B8C4D0",
   fontFamily: "var(--font-mono)",
   fontSize: "11px",
   outline: "none",
@@ -228,7 +228,7 @@ function PhotoEntryCard({
         <div
           style={{
             aspectRatio: `${entry.width || 1} / ${entry.height || 1}`,
-            background: "#0D0F11",
+            background: "#111F2E",
             overflow: "hidden",
             maxHeight: "180px",
           }}
@@ -636,9 +636,9 @@ export default function BulkUploadPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#080A0C",
+        background: "#0E1824",
         padding: "2rem",
-        color: "#F0F2F4",
+        color: "#B8C4D0",
       }}
     >
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
@@ -822,7 +822,7 @@ export default function BulkUploadPage() {
                   background:
                     readyCount === 0 ? "transparent" : "rgba(240,242,244,0.08)",
                   border: `0.5px solid ${readyCount === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)"}`,
-                  color: readyCount === 0 ? "rgba(240,242,244,0.2)" : "#F0F2F4",
+                  color: readyCount === 0 ? "rgba(240,242,244,0.2)" : "#B8C4D0",
                   cursor:
                     readyCount === 0 || saveState === "saving"
                       ? "not-allowed"

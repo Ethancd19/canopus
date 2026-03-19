@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160">
+  <!-- Ice blue Polaris mark on dark background -->
+  <circle cx="0" cy="0" r="80" fill="#08090C"/>
+
+  <!-- Cardinal rays — long -->
+  <path fill="#A8C5DA" d="M0,-66 C11,-38 11,-15 0,0 C-11,-15 -11,-38 0,-66 Z" transform="rotate(0)"/>
+  <path fill="#A8C5DA" d="M0,-66 C11,-38 11,-15 0,0 C-11,-15 -11,-38 0,-66 Z" transform="rotate(90)"/>
+  <path fill="#A8C5DA" d="M0,-66 C11,-38 11,-15 0,0 C-11,-15 -11,-38 0,-66 Z" transform="rotate(180)"/>
+  <path fill="#A8C5DA" d="M0,-66 C11,-38 11,-15 0,0 C-11,-15 -11,-38 0,-66 Z" transform="rotate(270)"/>
+
+  <!-- Diagonal rays — short -->
+  <path fill="#A8C5DA" d="M0,-37 C4.5,-21 4.5,-9 0,0 C-4.5,-9 -4.5,-21 0,-37 Z" transform="rotate(45)"/>
+  <path fill="#A8C5DA" d="M0,-37 C4.5,-21 4.5,-9 0,0 C-4.5,-9 -4.5,-21 0,-37 Z" transform="rotate(135)"/>
+  <path fill="#A8C5DA" d="M0,-37 C4.5,-21 4.5,-9 0,0 C-4.5,-9 -4.5,-21 0,-37 Z" transform="rotate(225)"/>
+  <path fill="#A8C5DA" d="M0,-37 C4.5,-21 4.5,-9 0,0 C-4.5,-9 -4.5,-21 0,-37 Z" transform="rotate(315)"/>
+
+  <!-- Hub ring punch-out -->
+  <circle fill="#08090C" cx="0" cy="0" r="10"/>
+
+  <!-- Center dot -->
+  <circle fill="#A8C5DA" cx="0" cy="0" r="5"/>
+</svg>

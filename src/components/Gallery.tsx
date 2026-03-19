@@ -109,7 +109,7 @@ function ExifBar({ photo }: { photo: Photo }) {
         right: 0,
         zIndex: 10,
         background:
-          "linear-gradient(to top, rgba(8,10,12,0.95) 0%, rgba(8,10,12,0.6) 65%, transparent 100%)",
+          "linear-gradient(to top, rgba(14,24,36,0.95) 0%, rgba(14,24,36,0.6) 65%, transparent 100%)",
         padding: "2.5rem 0.85rem 0.75rem",
         pointerEvents: "none",
       }}
@@ -131,7 +131,7 @@ function ExifBar({ photo }: { photo: Photo }) {
               fontFamily: "var(--font-serif)",
               fontSize: "13px",
               fontWeight: 300,
-              color: "#F0F2F4",
+              color: "#D4DCE8",
               lineHeight: 1,
             }}
           >
@@ -346,7 +346,7 @@ function ExpandedPhoto({
           maxWidth: "92vw",
           maxHeight: "88vh",
           overflow: "hidden",
-          border: "0.5px solid rgba(255,255,255,0.07)",
+          border: "0.5px solid rgba(212,220,232,0.07)",
         }}
       >
         {/* Image side */}
@@ -354,7 +354,7 @@ function ExpandedPhoto({
           style={{
             position: "relative",
             flexShrink: 0,
-            background: "#0D0F11",
+            background: "#111F2E",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -404,8 +404,8 @@ function ExpandedPhoto({
             flexDirection: "column",
             gap: "1.5rem",
             overflowY: "auto",
-            borderLeft: "0.5px solid rgba(255,255,255,0.06)",
-            background: "#0D0F11",
+            borderLeft: "0.5px solid rgba(212,220,232,0.06)",
+            background: "#111F2E",
           }}
         >
           <div>
@@ -414,7 +414,7 @@ function ExpandedPhoto({
                 fontFamily: "var(--font-serif)",
                 fontSize: "22px",
                 fontWeight: 300,
-                color: "#F0F2F4",
+                color: "#D4DCE8",
                 marginBottom: "0.4rem",
                 lineHeight: 1.2,
               }}
@@ -453,7 +453,7 @@ function ExpandedPhoto({
 
           <div
             style={{
-              borderTop: "0.5px solid rgba(255,255,255,0.06)",
+              borderTop: "0.5px solid rgba(212,220,232,0.06)",
               paddingTop: "1.25rem",
               display: "flex",
               flexDirection: "column",
@@ -516,7 +516,7 @@ function ExpandedPhoto({
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     padding: "0.2rem 0.55rem",
-                    border: "0.5px solid rgba(255,255,255,0.08)",
+                    border: "0.5px solid rgba(212,220,232,0.08)",
                     color: "rgba(240,242,244,0.35)",
                   }}
                 >
@@ -536,19 +536,19 @@ function ExpandedPhoto({
               textTransform: "uppercase",
               color: "rgba(240,242,244,0.3)",
               background: "transparent",
-              border: "0.5px solid rgba(255,255,255,0.08)",
+              border: "0.5px solid rgba(212,220,232,0.08)",
               padding: "0.5rem 0.85rem",
               cursor: "pointer",
               transition: "all 0.2s",
               alignSelf: "flex-start",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#F0F2F4";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+              e.currentTarget.style.color = "#D4DCE8";
+              e.currentTarget.style.borderColor = "rgba(212,220,232,0.25)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = "rgba(240,242,244,0.3)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.borderColor = "rgba(212,220,232,0.08)";
             }}
           >
             Close ✕
@@ -643,7 +643,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
         <div
           style={{
             display: "flex",
-            border: "0.5px solid rgba(255,255,255,0.1)",
+            border: "0.5px solid rgba(212,220,232,0.1)",
             overflow: "hidden",
           }}
         >
@@ -662,9 +662,9 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                     ? "rgba(240,242,244,0.1)"
                     : "transparent",
                 color:
-                  activeFormat === fmt ? "#F0F2F4" : "rgba(240,242,244,0.35)",
+                  activeFormat === fmt ? "#D4DCE8" : "rgba(212,220,232,0.35)",
                 border: "none",
-                borderRight: "0.5px solid rgba(255,255,255,0.1)",
+                borderRight: "0.5px solid rgba(212,220,232,0.1)",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
@@ -688,8 +688,8 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                 padding: "0.3rem 0.7rem",
                 background: "transparent",
                 color:
-                  activeGenre === genre ? "#F0F2F4" : "rgba(240,242,244,0.35)",
-                border: `0.5px solid ${activeGenre === genre ? "rgba(240,242,244,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  activeGenre === genre ? "#B8C4D0" : "rgba(240,242,244,0.35)",
+                border: `0.5px solid ${activeGenre === genre ? "rgba(240,242,244,0.4)" : "rgba(212,220,232,0.08)"}`,
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}

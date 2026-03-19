@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#080A0C",
+        background: "#0E1824",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -50,7 +50,7 @@ export default function LoginPage() {
             fontFamily: "var(--font-serif)",
             fontSize: "28px",
             fontWeight: 300,
-            color: "#F0F2F4",
+            color: "#B8C4D0",
             marginBottom: "0.5rem",
             letterSpacing: "0.1em",
           }}
@@ -84,7 +84,7 @@ export default function LoginPage() {
               background: "rgba(255,255,255,0.04)",
               border: "0.5px solid rgba(255,255,255,0.1)",
               padding: "0.85rem 1rem",
-              color: "#F0F2F4",
+              color: "#B8C4D0",
               fontFamily: "var(--font-mono)",
               fontSize: "13px",
               outline: "none",
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 ? "rgba(240,242,244,0.05)"
                 : "rgba(240,242,244,0.08)",
               border: "0.5px solid rgba(255,255,255,0.15)",
-              color: loading ? "rgba(240,242,244,0.3)" : "#F0F2F4",
+              color: loading ? "rgba(240,242,244,0.3)" : "#B8C4D0",
               cursor: loading ? "not-allowed" : "pointer",
               transition: "all 0.2s",
             }}
