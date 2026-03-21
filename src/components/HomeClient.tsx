@@ -2,15 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
+import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Gallery from "@/components/Gallery";
 import { Photo } from "@/types/photo";
 
 export default function HomeClient({ photos }: { photos: Photo[] }) {
+  const router = useRouter();
   const [introPhase, setIntroPhase] = useState<"name" | "image" | "done">(
     "name",
   );
   const [navVisible, setNavVisible] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [launching, setLaunching] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -18,16 +22,11 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
     offset: ["start start", "end end"],
   });
 
+  // Navy dark → slate scroll transition
   const backgroundColor = useTransform(
     scrollYProgress,
     [0, 0.35],
-    ["#080A0C", "#F0F2F4"],
-  );
-
-  const textColor = useTransform(
-    scrollYProgress,
-    [0, 0.35],
-    ["#F0F2F4", "#080A0C"],
+    ["#0E1824", "#B8C4D0"],
   );
 
   useEffect(() => {
@@ -42,10 +41,23 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
     };
   }, []);
 
+  const handleTitleClick = () => {
+    if (launching) return;
+    const next = clickCount + 1;
+    setClickCount(next);
+    if (next >= 10) {
+      setLaunching(true);
+      setTimeout(() => router.push("/canopus-is-watching"), 1100);
+    }
+  };
+
+  const remaining = 10 - clickCount;
+
   return (
     <motion.div ref={containerRef} style={{ backgroundColor }}>
       <Nav visible={navVisible} />
 
+      {/* ── Intro ── */}
       <section
         style={{
           position: "relative",
@@ -72,37 +84,72 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
             willChange: "opacity",
           }}
         />
-
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(8,10,12,0.45)",
+            background: "rgba(14,24,36,0.5)",
           }}
         />
 
-        <motion.h1
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 2, ease: "easeOut" }}
-          style={{
-            position: "relative",
-            zIndex: 2,
-            fontFamily: "var(--font-serif)",
-            fontSize: "clamp(4rem, 10vw, 9rem)",
-            fontWeight: 300,
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            color: "#F0F2F4",
-            lineHeight: 1,
-          }}
-        >
-          Canopus
-        </motion.h1>
+        {/* Title + easter egg */}
+        <div style={{ position: "relative", zIndex: 2, textAlign: "center" }}>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={
+              launching
+                ? { opacity: 0, y: -600, scale: 0.4 }
+                : { opacity: 1, y: 0, scale: 1 }
+            }
+            transition={
+              launching
+                ? { duration: 1.1, ease: [0.4, 0, 1, 1] }
+                : { duration: 2, ease: "easeOut" }
+            }
+            onClick={handleTitleClick}
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(4rem, 10vw, 9rem)",
+              fontWeight: 300,
+              letterSpacing: "0.3em",
+              textTransform: "uppercase",
+              color: "#D4DCE8",
+              lineHeight: 1,
+              cursor: "default",
+              userSelect: "none",
+              display: "block",
+            }}
+          >
+            Canopus
+          </motion.h1>
+
+          <AnimatePresence>
+            {clickCount >= 3 && clickCount < 10 && !launching && (
+              <motion.p
+                key={remaining}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "9px",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "rgba(212,220,232,0.4)",
+                  marginTop: "0.75rem",
+                  userSelect: "none",
+                }}
+              >
+                {remaining === 1 ? "one more…" : `${remaining} more`}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
+          animate={{ opacity: launching ? 0 : 0.5 }}
           transition={{ duration: 2, delay: 0.6, ease: "easeOut" }}
           style={{
             position: "relative",
@@ -111,15 +158,16 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
             fontSize: "10px",
             letterSpacing: "0.3em",
             textTransform: "uppercase",
-            color: "#F0F2F4",
+            color: "#D4DCE8",
             marginTop: "1.5rem",
+            userSelect: "none",
           }}
         >
           Photography &nbsp;·&nbsp; Ethan Duval
         </motion.p>
 
         <AnimatePresence>
-          {introPhase === "done" && (
+          {introPhase === "done" && !launching && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -135,6 +183,7 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: "8px",
+                pointerEvents: "none",
               }}
             >
               <span
@@ -143,7 +192,7 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
                   fontSize: "9px",
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
-                  color: "rgba(240,242,244,0.5)",
+                  color: "rgba(212,220,232,0.5)",
                 }}
               >
                 Scroll
@@ -158,7 +207,7 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
                 style={{
                   width: "1px",
                   height: "40px",
-                  background: "rgba(240,242,244,0.4)",
+                  background: "rgba(212,220,232,0.4)",
                   transformOrigin: "top",
                   willChange: "transform",
                 }}
@@ -168,10 +217,12 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
         </AnimatePresence>
       </section>
 
+      {/* ── Gallery ── */}
       <section
         style={{
           minHeight: "100vh",
-          padding: "clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem)",
+          padding:
+            "clamp(5rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem) clamp(3rem, 6vw, 5rem)",
         }}
       >
         <motion.div
@@ -180,21 +231,23 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <motion.p
+          {/* Copper accent label on slate background */}
+          <p
             style={{
-              color: textColor,
+              color: "#B87333",
               fontFamily: "var(--font-mono)",
-              fontSize: "10px",
+              fontSize: "11px",
+              fontWeight: 500,
               letterSpacing: "0.25em",
               textTransform: "uppercase",
-              opacity: 0.5,
+              opacity: 0.9,
               marginBottom: "2.5rem",
             }}
           >
             Selected work
-          </motion.p>
+          </p>
 
-          <Gallery photos={photos} />
+          <Gallery photos={photos} theme="light" />
         </motion.div>
       </section>
     </motion.div>

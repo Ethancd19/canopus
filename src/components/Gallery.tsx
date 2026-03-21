@@ -64,7 +64,7 @@ const CHEEKY_MESSAGES = [
 
 function pickRandom(pool: string[], history: string[], avoidCount = 3): string {
   const recent = history.slice(-avoidCount);
-  const available = pool.filter((msg) => !recent.includes(msg));
+  const available = pool.filter((m) => !recent.includes(m));
   const source = available.length > 0 ? available : pool;
   return source[Math.floor(Math.random() * source.length)];
 }
@@ -74,7 +74,32 @@ function cloudinaryUrl(id: string, width = 800) {
   return `https://res.cloudinary.com/${cloud}/image/upload/w_${width},q_auto,f_auto/${id}`;
 }
 
-// ─── Mini EXIF value pill ───────────────────────────────────────────────────
+// ─── Theme-aware color helper ─────────────────────────────────────────────────
+
+function tc(light: string, dark: string, theme: "light" | "dark") {
+  return theme === "light" ? light : dark;
+}
+
+// Light theme uses very dark navy text on slate bg for maximum contrast
+const LIGHT = {
+  text: "#0E1824",
+  textMuted: "#2A3A4A",
+  textFaint: "rgba(14,24,36,0.45)",
+  border: "rgba(14,24,36,0.25)",
+  borderFaint: "rgba(14,24,36,0.12)",
+  activeBg: "rgba(14,24,36,0.08)",
+};
+
+const DARK = {
+  text: "#D4DCE8",
+  textMuted: "rgba(212,220,232,0.6)",
+  textFaint: "rgba(212,220,232,0.35)",
+  border: "rgba(212,220,232,0.3)",
+  borderFaint: "rgba(212,220,232,0.08)",
+  activeBg: "rgba(212,220,232,0.08)",
+};
+
+// ─── Mini EXIF pill ───────────────────────────────────────────────────────────
 
 function MiniExif({ value }: { value: string }) {
   return (
@@ -82,7 +107,7 @@ function MiniExif({ value }: { value: string }) {
       style={{
         fontFamily: "var(--font-mono)",
         fontSize: "10px",
-        color: "rgba(240,242,244,0.65)",
+        color: "rgba(212,220,232,0.65)",
         letterSpacing: "0.05em",
       }}
     >
@@ -91,11 +116,10 @@ function MiniExif({ value }: { value: string }) {
   );
 }
 
-// ─── EXIF overlay (appears on image on hover) ────────────────────────────────
+// ─── EXIF overlay ─────────────────────────────────────────────────────────────
 
 function ExifBar({ photo }: { photo: Photo }) {
   const isFilm = photo.format !== "DIGITAL";
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -109,7 +133,7 @@ function ExifBar({ photo }: { photo: Photo }) {
         right: 0,
         zIndex: 10,
         background:
-          "linear-gradient(to top, rgba(8,10,12,0.95) 0%, rgba(8,10,12,0.6) 65%, transparent 100%)",
+          "linear-gradient(to top, rgba(14,24,36,0.95) 0%, rgba(14,24,36,0.6) 65%, transparent 100%)",
         padding: "2.5rem 0.85rem 0.75rem",
         pointerEvents: "none",
       }}
@@ -131,13 +155,12 @@ function ExifBar({ photo }: { photo: Photo }) {
               fontFamily: "var(--font-serif)",
               fontSize: "13px",
               fontWeight: 300,
-              color: "#F0F2F4",
+              color: "#D4DCE8",
               lineHeight: 1,
             }}
           >
             {photo.title}
           </span>
-
           <div
             style={{
               display: "flex",
@@ -162,7 +185,6 @@ function ExifBar({ photo }: { photo: Photo }) {
             )}
           </div>
         </div>
-
         {photo.location && (
           <span
             style={{
@@ -170,7 +192,7 @@ function ExifBar({ photo }: { photo: Photo }) {
               fontSize: "8px",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: "rgba(240,242,244,0.4)",
+              color: "rgba(212,220,232,0.4)",
             }}
           >
             {photo.location}
@@ -193,7 +215,6 @@ function PhotoCard({
   onClick: (p: Photo) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.97 }}
@@ -235,8 +256,6 @@ function PhotoCard({
             transform: hovered ? "scale(1.03)" : "scale(1)",
           }}
         />
-
-        {/* Format badge */}
         <div
           style={{
             position: "absolute",
@@ -246,8 +265,8 @@ function PhotoCard({
             fontSize: "8px",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            color: "rgba(240,242,244,0.6)",
-            background: "rgba(8,10,12,0.5)",
+            color: "rgba(212,220,232,0.6)",
+            background: "rgba(14,24,36,0.5)",
             padding: "0.2rem 0.5rem",
             backdropFilter: "blur(4px)",
             zIndex: 5,
@@ -255,8 +274,6 @@ function PhotoCard({
         >
           {FORMAT_LABELS[photo.format]}
         </div>
-
-        {/* EXIF overlay */}
         <AnimatePresence>
           {hovered && <ExifBar photo={photo} />}
         </AnimatePresence>
@@ -265,7 +282,7 @@ function PhotoCard({
   );
 }
 
-// ─── MetaRow ─────────────────────────────────────────────────────────────────
+// ─── MetaRow ──────────────────────────────────────────────────────────────────
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
@@ -283,7 +300,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
           fontSize: "9px",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
-          color: "rgba(240,242,244,0.3)",
+          color: "rgba(212,220,232,0.3)",
           flexShrink: 0,
         }}
       >
@@ -293,7 +310,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: "11px",
-          color: "rgba(240,242,244,0.7)",
+          color: "rgba(212,220,232,0.7)",
           textAlign: "right",
         }}
       >
@@ -303,7 +320,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ─── Expanded photo modal ─────────────────────────────────────────────────────
+// ─── Expanded modal ───────────────────────────────────────────────────────────
 
 function ExpandedPhoto({
   photo,
@@ -314,7 +331,6 @@ function ExpandedPhoto({
 }) {
   const isFilm = photo.format !== "DIGITAL";
   const [loaded, setLoaded] = useState(false);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -326,7 +342,7 @@ function ExpandedPhoto({
         position: "fixed",
         inset: 0,
         zIndex: 60,
-        background: "rgba(8,10,12,0.96)",
+        background: "rgba(14,24,36,0.96)",
         backdropFilter: "blur(16px)",
         display: "flex",
         alignItems: "center",
@@ -346,15 +362,14 @@ function ExpandedPhoto({
           maxWidth: "92vw",
           maxHeight: "88vh",
           overflow: "hidden",
-          border: "0.5px solid rgba(255,255,255,0.07)",
+          border: "0.5px solid rgba(212,220,232,0.07)",
         }}
       >
-        {/* Image side */}
         <div
           style={{
             position: "relative",
             flexShrink: 0,
-            background: "#0D0F11",
+            background: "#111F2E",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -368,13 +383,12 @@ function ExpandedPhoto({
                 fontSize: "9px",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: "rgba(240,242,244,0.15)",
+                color: "rgba(212,220,232,0.15)",
               }}
             >
               Loading…
             </span>
           )}
-
           <img
             src={cloudinaryUrl(photo.cloudinaryId, 1600)}
             alt={photo.title}
@@ -390,8 +404,6 @@ function ExpandedPhoto({
             }}
           />
         </div>
-
-        {/* Info panel */}
         <motion.div
           initial={{ x: 32, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -404,8 +416,8 @@ function ExpandedPhoto({
             flexDirection: "column",
             gap: "1.5rem",
             overflowY: "auto",
-            borderLeft: "0.5px solid rgba(255,255,255,0.06)",
-            background: "#0D0F11",
+            borderLeft: "0.5px solid rgba(212,220,232,0.06)",
+            background: "#111F2E",
           }}
         >
           <div>
@@ -414,7 +426,7 @@ function ExpandedPhoto({
                 fontFamily: "var(--font-serif)",
                 fontSize: "22px",
                 fontWeight: 300,
-                color: "#F0F2F4",
+                color: "#D4DCE8",
                 marginBottom: "0.4rem",
                 lineHeight: 1.2,
               }}
@@ -428,14 +440,13 @@ function ExpandedPhoto({
                   fontSize: "9px",
                   letterSpacing: "0.15em",
                   textTransform: "uppercase",
-                  color: "rgba(240,242,244,0.35)",
+                  color: "rgba(212,220,232,0.35)",
                 }}
               >
                 {photo.location}
               </p>
             )}
           </div>
-
           {photo.caption && (
             <p
               style={{
@@ -443,17 +454,16 @@ function ExpandedPhoto({
                 fontSize: "14px",
                 fontWeight: 300,
                 fontStyle: "italic",
-                color: "rgba(240,242,244,0.65)",
+                color: "rgba(212,220,232,0.65)",
                 lineHeight: 1.7,
               }}
             >
               {photo.caption}
             </p>
           )}
-
           <div
             style={{
-              borderTop: "0.5px solid rgba(255,255,255,0.06)",
+              borderTop: "0.5px solid rgba(212,220,232,0.06)",
               paddingTop: "1.25rem",
               display: "flex",
               flexDirection: "column",
@@ -466,13 +476,12 @@ function ExpandedPhoto({
                 fontSize: "9px",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: "rgba(240,242,244,0.25)",
+                color: "rgba(212,220,232,0.25)",
                 marginBottom: "0.25rem",
               }}
             >
               {isFilm ? "Film data" : "Exposure data"}
             </span>
-
             {!isFilm ? (
               <>
                 {photo.camera && (
@@ -504,7 +513,6 @@ function ExpandedPhoto({
               </>
             )}
           </div>
-
           {photo.tags.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
               {photo.tags.map((tag) => (
@@ -516,8 +524,8 @@ function ExpandedPhoto({
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     padding: "0.2rem 0.55rem",
-                    border: "0.5px solid rgba(255,255,255,0.08)",
-                    color: "rgba(240,242,244,0.35)",
+                    border: "0.5px solid rgba(212,220,232,0.08)",
+                    color: "rgba(212,220,232,0.35)",
                   }}
                 >
                   {tag}
@@ -525,7 +533,6 @@ function ExpandedPhoto({
               ))}
             </div>
           )}
-
           <button
             onClick={onClose}
             style={{
@@ -534,21 +541,21 @@ function ExpandedPhoto({
               fontSize: "9px",
               letterSpacing: "0.15em",
               textTransform: "uppercase",
-              color: "rgba(240,242,244,0.3)",
+              color: "rgba(212,220,232,0.3)",
               background: "transparent",
-              border: "0.5px solid rgba(255,255,255,0.08)",
+              border: "0.5px solid rgba(212,220,232,0.08)",
               padding: "0.5rem 0.85rem",
               cursor: "pointer",
               transition: "all 0.2s",
               alignSelf: "flex-start",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#F0F2F4";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
+              e.currentTarget.style.color = "#D4DCE8";
+              e.currentTarget.style.borderColor = "rgba(212,220,232,0.25)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "rgba(240,242,244,0.3)";
-              e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+              e.currentTarget.style.color = "rgba(212,220,232,0.3)";
+              e.currentTarget.style.borderColor = "rgba(212,220,232,0.08)";
             }}
           >
             Close ✕
@@ -559,16 +566,24 @@ function ExpandedPhoto({
   );
 }
 
-// ─── Main Gallery export ──────────────────────────────────────────────────────
+// ─── Main Gallery ─────────────────────────────────────────────────────────────
 
-export default function Gallery({ photos }: { photos: Photo[] }) {
+export default function Gallery({
+  photos,
+  theme = "dark",
+}: {
+  photos: Photo[];
+  theme?: "dark" | "light";
+}) {
+  const T = theme === "light" ? LIGHT : DARK;
+
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
   const [activeFormat, setActiveFormat] = useState<string>("All");
   const [activeGenre, setActiveGenre] = useState<string>("All");
-
   const messageHistoryRef = useRef<string[]>([]);
   const consecutiveEmptyRef = useRef(0);
   const [currentMessage, setCurrentMessage] = useState<string>("");
+
   useEffect(() => {
     const msg = pickRandom(EMPTY_MESSAGES, [], 0);
     messageHistoryRef.current = [msg];
@@ -588,7 +603,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
     if (isEmpty) {
       consecutiveEmptyRef.current += 1;
       const pool =
-        consecutiveEmptyRef.current > 2 ? CHEEKY_MESSAGES : EMPTY_MESSAGES;
+        consecutiveEmptyRef.current >= 2 ? CHEEKY_MESSAGES : EMPTY_MESSAGES;
       const msg = pickRandom(pool, messageHistoryRef.current, 3);
       messageHistoryRef.current = [...messageHistoryRef.current, msg];
       setCurrentMessage(msg);
@@ -643,8 +658,9 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
         <div
           style={{
             display: "flex",
-            border: "0.5px solid rgba(255,255,255,0.1)",
+            border: `1px solid ${T.border}`,
             overflow: "hidden",
+            borderRadius: "2px",
           }}
         >
           {ALL_FORMATS.map((fmt) => (
@@ -657,14 +673,10 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
                 padding: "0.5rem 1.1rem",
-                background:
-                  activeFormat === fmt
-                    ? "rgba(240,242,244,0.1)"
-                    : "transparent",
-                color:
-                  activeFormat === fmt ? "#F0F2F4" : "rgba(240,242,244,0.35)",
+                background: activeFormat === fmt ? T.activeBg : "transparent",
+                color: activeFormat === fmt ? T.text : T.textFaint,
                 border: "none",
-                borderRight: "0.5px solid rgba(255,255,255,0.1)",
+                borderRight: `1px solid ${T.border}`,
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
@@ -687,11 +699,11 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                 textTransform: "uppercase",
                 padding: "0.3rem 0.7rem",
                 background: "transparent",
-                color:
-                  activeGenre === genre ? "#F0F2F4" : "rgba(240,242,244,0.35)",
-                border: `0.5px solid ${activeGenre === genre ? "rgba(240,242,244,0.4)" : "rgba(255,255,255,0.08)"}`,
+                color: activeGenre === genre ? T.text : T.textFaint,
+                border: `1px solid ${activeGenre === genre ? T.border : T.borderFaint}`,
                 cursor: "pointer",
                 transition: "all 0.2s",
+                borderRadius: "2px",
               }}
             >
               {genre}
@@ -700,6 +712,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
         </div>
       </div>
 
+      {/* ── Grid / Empty ── */}
       <AnimatePresence mode="wait">
         {filtered.length === 0 ? (
           <motion.div
@@ -723,14 +736,16 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                 fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
                 fontWeight: 300,
                 fontStyle: "italic",
-                color: "rgba(240,242,244,0.45)",
+                color: T.textMuted,
                 lineHeight: 1.5,
               }}
             >
-              {currentMessage && (
+              {currentMessage ? (
                 <ScrambleText key={currentMessage}>
                   {currentMessage}
                 </ScrambleText>
+              ) : (
+                <ScrambleText>{pickRandom(EMPTY_MESSAGES, [], 0)}</ScrambleText>
               )}
             </p>
             <span
@@ -739,7 +754,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
                 fontSize: "9px",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: "rgba(240,242,244,0.25)",
+                color: T.textFaint,
               }}
             >
               Check back soon
@@ -747,17 +762,14 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
           </motion.div>
         ) : (
           <motion.div
+            key="grid"
             layout
-            style={{
-              columns: "var(--gallery-cols, 3)",
-              columnGap: "3px",
-            }}
+            style={{ columns: "var(--gallery-cols, 3)", columnGap: "3px" }}
           >
             <style>{`
-                    @media (max-width: 1024px) { :root { --gallery-cols: 2; } }
-                    @media (max-width: 640px)  { :root { --gallery-cols: 1; } }
-                    `}</style>
-
+              @media (max-width: 1024px) { :root { --gallery-cols: 2; } }
+              @media (max-width: 640px)  { :root { --gallery-cols: 1; } }
+            `}</style>
             {filtered.map((photo, i) => (
               <div
                 key={photo.id}
@@ -774,6 +786,7 @@ export default function Gallery({ photos }: { photos: Photo[] }) {
         )}
       </AnimatePresence>
 
+      {/* ── Modal ── */}
       <AnimatePresence>
         {activePhoto && (
           <ExpandedPhoto

@@ -3,12 +3,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Canopus",
-  description: "Photography by Ethan Duval",
-  openGraph: {
-    title: "Canopus",
-    description: "Photography by Ethan Duval",
-    url: "https://bycanopus.com",
-    siteName: "Canopus",
+  description: "Photography portfolio. Digital and film. Ethan Duval.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
