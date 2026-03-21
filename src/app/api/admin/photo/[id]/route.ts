@@ -3,12 +3,13 @@ import { db } from "@/lib/db";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const photo = await db.photo.update({
-      where: { id: params.id },
+      where: { id },
       data: body,
     });
     return NextResponse.json({ ok: true, photo });
@@ -20,10 +21,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await db.photo.delete({ where: { id: params.id } });
+    const { id } = await params;
+    await db.photo.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
