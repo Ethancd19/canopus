@@ -691,7 +691,7 @@ export default function BulkUploadPage() {
               ← Single upload
             </a>
             <a
-              href="/admin"
+              href="/admin/photos"
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",
