@@ -3,10 +3,9 @@
 import React, { useState, useCallback } from "react";
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
-import { read } from "fs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Format = "DIGITAL" | "FILM_35MM" | "FILM_120";
+type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
 
 type PhotoEntry = {
   id: string;
@@ -303,7 +302,7 @@ function PhotoEntryCard({
             >
               <option value="DIGITAL">Digital</option>
               <option value="FILM_35MM">35mm Film</option>
-              <option value="FILM_120">120 Film</option>
+              <option value="FILM_120MM">120 Film</option>
             </select>
           </Field>
           <Field label="Location">
