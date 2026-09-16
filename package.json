@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "24.x"
+    "node": ">=24"
   },
   "scripts": {
     "postinstall": "prisma generate",
@@ -20,10 +20,10 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv --include-runtime=false cloudflare-env.d.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.79.0",
+    "@anthropic-ai/sdk": "^0.126.0",
     "@neondatabase/serverless": "^1.0.2",
-    "@prisma/adapter-neon": "^7.5.0",
-    "@prisma/client": "^7.5.0",
+    "@prisma/adapter-neon": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "bcryptjs": "^3.0.3",
     "browser-image-compression": "^2.0.2",
     "dotenv": "^17.3.1",
@@ -31,8 +31,7 @@
     "motion": "^12.38.0",
     "motion-plus": "https://api.motion.dev/registry.tgz?package=motion-plus&version=2.6.1&token=55264086569220113826fe9ba5e6fb3d8d11a8574b904aa0c3a51b36d875d778",
     "next": "^16.3.5",
-    "next-auth": "^5.0.0-beta.30",
-    "prisma": "^7.5.0",
+    "next-auth": "^5.0.0-beta.32",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.4"
@@ -47,6 +46,7 @@
     "esbuild": "^0.27.7",
     "eslint": "^9",
     "eslint-config-next": "^16.3.5",
+    "prisma": "^7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8.3.0",
