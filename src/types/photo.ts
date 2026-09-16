@@ -1,4 +1,4 @@
-import type { Photo as PrismaPhoto } from "@prisma/client";
+import type { Photo as PrismaPhoto } from "@/generated/prisma/client";
 
 export type Photo = Pick<
   PrismaPhoto,

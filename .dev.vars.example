@@ -1,0 +1,9 @@
+# Copy to .dev.vars for `npm run preview` (local Worker). Never commit .dev.vars.
+NEXTJS_ENV=development
+DATABASE_URL=
+AUTH_SECRET=
+ADMIN_PASSWORD_HASH=
+ANTHROPIC_API_KEY=
+# Optional, defaults to claude-opus-5
+ANTHROPIC_MODEL=
+RESEND_API_KEY=

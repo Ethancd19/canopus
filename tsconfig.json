@@ -10,6 +10,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // `scripts/*.ts` run on Node's type stripping, which needs the real
+    // `.ts` extension in relative imports.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,

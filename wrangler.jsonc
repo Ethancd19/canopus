@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "canopus",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "canopus"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  // Custom domains are added in the walkthrough after the first workers.dev
+  // deploy succeeds. They are commented out here so `wrangler deploy` does not
+  // fail while the Vercel DNS records still exist.
+  // "routes": [
+  //   { "pattern": "bycanopus.com", "custom_domain": true },
+  //   { "pattern": "www.bycanopus.com", "custom_domain": true }
+  // ],
+  "vars": {
+    "NEXTJS_ENV": "production"
+  }
+}
