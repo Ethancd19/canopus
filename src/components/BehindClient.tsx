@@ -290,7 +290,7 @@ function InfluencesSection() {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <p style={S.intro}>
-        People whose work or teaching changed how I see. People I've encountered
+        People whose work or teaching changed how I see. People I&apos;ve encountered
         directly, or whose work I keep coming back to.
       </p>
 
@@ -423,7 +423,7 @@ export default function BehindClient() {
               lineHeight: 1,
             }}
           >
-            How it's made.
+            How it&apos;s made.
           </h1>
         </motion.div>
 

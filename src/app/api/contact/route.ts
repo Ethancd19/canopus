@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +19,11 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeSubject = subject ? escapeHtml(subject) : "";
+    const safeMessage = escapeHtml(message);
     await resend.emails.send({
       from: "Canopus Contact <contact@bycanopus.com>",
       to: ["ethan@bycanopus.com"],
@@ -21,16 +33,19 @@ export async function POST(request: Request) {
         : `[Canopus] Message from ${name}`,
       html: `
         <div style="font-family: monospace; font-size: 13px; color: #1a1a1a; max-width: 600px;">
-          <p><strong>From:</strong> ${name} (${email})</p>
-          ${subject ? `<p><strong>Subject:</strong> ${subject}</p>` : ""}
+          <p><strong>From:</strong> ${safeName} (${safeEmail})</p>
+          ${safeSubject ? `<p><strong>Subject:</strong> ${safeSubject}</p>` : ""}
           <hr style="border: none; border-top: 1px solid #eee; margin: 1rem 0;" />
-          <p style="white-space: pre-wrap; line-height: 1.7;">${message}</p>
+          <p style="white-space: pre-wrap; line-height: 1.7;">${safeMessage}</p>
         </div>
       `,
     });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    console.error(err);
+    return NextResponse.json(
+      { ok: false, error: "Failed to send message" },
+      { status: 500 },
+    );
   }
 }

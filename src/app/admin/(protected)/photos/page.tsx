@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Format = "DIGITAL" | "FILM_35MM" | "FILM_120" | "FILM_120MM";
+type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
 
 type Photo = {
   id: string;
@@ -131,7 +132,7 @@ function PhotoRow({
   const toggleFeatured = async () => {
     const next = !photo.featured;
     onUpdate(photo.id, { featured: next });
-    await fetch(`/api/admin/photo/${photo.id}`, {
+    await adminFetch(`/api/admin/photo/${photo.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ featured: next }),
@@ -142,7 +143,7 @@ function PhotoRow({
     setSaving(true);
     setSaveStatus("idle");
     try {
-      const res = await fetch(`/api/admin/photo/${photo.id}`, {
+      const res = await adminFetch(`/api/admin/photo/${photo.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -178,7 +179,7 @@ function PhotoRow({
     if (!confirm(`Delete "${photo.title}"? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await fetch(`/api/admin/photo/${photo.id}`, { method: "DELETE" });
+      await adminFetch(`/api/admin/photo/${photo.id}`, { method: "DELETE" });
       onDelete(photo.id);
     } catch {
       setDeleting(false);
@@ -190,7 +191,7 @@ function PhotoRow({
     try {
       const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const imageUrl = `https://res.cloudinary.com/${cloud}/image/upload/${photo.cloudinaryId}`;
-      const res = await fetch("/api/admin/tags", {
+      const res = await adminFetch("/api/admin/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrl }),
@@ -456,7 +457,7 @@ function PhotoRow({
                   >
                     <option value="DIGITAL">Digital</option>
                     <option value="FILM_35MM">35mm</option>
-                    <option value="FILM_120">120</option>
+                    <option value="FILM_120MM">120</option>
                   </select>
                 </Field>
               </div>
@@ -719,7 +720,7 @@ export default function AdminPhotosPage() {
   const [filter, setFilter] = useState<"all" | "featured" | "untagged">("all");
 
   useEffect(() => {
-    fetch("/api/admin/photos")
+    adminFetch("/api/admin/photos")
       .then((res) => res.json())
       .then((data) => {
         setPhotos(data.photos ?? []);
@@ -799,7 +800,7 @@ export default function AdminPhotosPage() {
 
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <a
-              href="/admin/bulk-upload"
+              href="/admin/bulk_upload"
               style={{
                 fontFamily: "var(--font-mono)",
                 fontSize: "9px",

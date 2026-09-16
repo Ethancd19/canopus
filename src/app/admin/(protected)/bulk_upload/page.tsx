@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
+import { adminFetch } from "@/lib/admin-fetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
@@ -568,7 +569,7 @@ export default function BulkUploadPage() {
 
     for (const entry of ready) {
       try {
-        const res = await fetch("/api/admin/photo", {
+        const res = await adminFetch("/api/admin/photo", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

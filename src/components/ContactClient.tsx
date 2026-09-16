@@ -490,7 +490,7 @@ export default function ContactClient() {
                         letterSpacing: "0.02em",
                       }}
                     >
-                      Let's make
+                      Let&apos;s make
                       <br />
                       something.
                     </h1>

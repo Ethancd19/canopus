@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
+import { adminFetch } from "@/lib/admin-fetch";
 
 type ExifData = {
   camera?: string;
@@ -43,7 +44,7 @@ export default function UploadPage() {
 
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [format, setFormat] = useState<"DIGITAL" | "FILM_35MM" | "FILM_120">(
+  const [format, setFormat] = useState<"DIGITAL" | "FILM_35MM" | "FILM_120MM">(
     "DIGITAL",
   );
   const [location, setLocation] = useState("");
@@ -133,7 +134,7 @@ export default function UploadPage() {
   };
 
   const getAiTags = async (imageUrl: string): Promise<AiSuggestion> => {
-    const res = await fetch("/api/admin/tags", {
+    const res = await adminFetch("/api/admin/tags", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -183,7 +184,7 @@ export default function UploadPage() {
     setState("saving");
 
     try {
-      const res = await fetch("/api/admin/photo", {
+      const res = await adminFetch("/api/admin/photo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -460,7 +461,7 @@ export default function UploadPage() {
             >
               <option value="DIGITAL">Digital</option>
               <option value="FILM_35MM">35mm Film</option>
-              <option value="FILM_120">120 Film</option>
+              <option value="FILM_120MM">120 Film</option>
             </select>
           </Field>
 

@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { apiOk, handleRouteError } from "@/lib/api";
+import { requireAdmin } from "@/lib/require-admin";
 
 export async function GET() {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
-    const photos = await db.photo.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return NextResponse.json({ ok: true, photos });
+    const photos = await db.photo.findMany({ orderBy: { createdAt: "desc" } });
+    return apiOk({ photos });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    return handleRouteError(err);
   }
 }

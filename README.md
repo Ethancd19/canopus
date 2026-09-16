@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Canopus
 
-## Getting Started
+Photography portfolio. Next.js 16, Prisma 7 on Neon Postgres, NextAuth v5.
 
-First, run the development server:
+## Setup
+
+Requires Node 26 or newer (the hash script relies on Node's built-in TypeScript support).
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in the values
+npx prisma generate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Admin password
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The admin login compares against a bcrypt hash in `ADMIN_PASSWORD_HASH`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+printf '%s' 'your password' | npm run -s hash-password
+```
 
-## Learn More
+Paste the output into `.env.local` (and into your host's environment settings). Set `ADMIN_PASSWORD_HASH` on your host before deploying; without it, admin login is disabled and the server logs a warning.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Prisma generate + Next dev server |
+| `npm run build` | Production build |
+| `npm test` | Vitest, single run |
+| `npm run test:watch` | Vitest in watch mode |
+| `npm run lint` | ESLint |
+| `npm run hash-password` | Hash an admin password from stdin |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The test scripts pass `--no-deprecation` to hide Node's DEP0205 warning emitted by Vite's loader on Node 26; remove the flag once Vite no longer calls `module.register()`.
 
-## Deploy on Vercel
+## Admin
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/admin/login` is public. Everything else under `/admin` requires a session.
+- Every `/api/admin/*` route returns `401 { ok: false, error: "unauthorized" }` without a session.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Design docs
+
+- `docs/superpowers/specs/` holds design specs.
+- `docs/superpowers/plans/` holds implementation plans.
