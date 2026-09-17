@@ -43,6 +43,7 @@ The test scripts pass `--no-deprecation` to hide Node's DEP0205 warning emitted 
 
 - `/admin/login` is public. Everything else under `/admin` requires a session.
 - Every `/api/admin/*` route returns `401 { ok: false, error: "unauthorized" }` without a session.
+- Uploads go to Cloudflare R2 and are served from `/img/<key>?w=<width>`; see the walkthrough's Storage section.
 
 ## Deploy
 

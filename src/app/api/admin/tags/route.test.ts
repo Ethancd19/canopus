@@ -10,6 +10,20 @@ vi.mock("@anthropic-ai/sdk", () => ({
   },
 }));
 
+const { bucketGet, imagesInput, transformer } = vi.hoisted(() => {
+  const output = { image: () => new Blob([new Uint8Array([7, 7, 7])]).stream(), contentType: () => "image/jpeg", response: () => new Response() };
+  const transformer = { transform: vi.fn(), output: vi.fn().mockResolvedValue(output) };
+  transformer.transform.mockReturnValue(transformer);
+  return {
+    bucketGet: vi.fn(),
+    imagesInput: vi.fn().mockReturnValue(transformer),
+    transformer,
+  };
+});
+vi.mock("@/lib/cloudflare", () => ({
+  getEnv: () => ({ PHOTOS: { get: bucketGet }, IMAGES: { input: imagesInput } }),
+}));
+
 import { auth } from "@/lib/auth";
 import { POST } from "./route";
 
@@ -27,6 +41,10 @@ describe("POST /api/admin/tags", () => {
   beforeEach(() => {
     mockedAuth.mockReset();
     create.mockReset();
+    bucketGet.mockReset();
+    imagesInput.mockClear();
+    transformer.transform.mockClear();
+    transformer.output.mockClear();
   });
 
   it("rejects unauthenticated requests", async () => {
@@ -75,5 +93,41 @@ describe("POST /api/admin/tags", () => {
         ],
       }),
     );
+  });
+
+  it("reads a photo from R2 and sends it as a base64 image block", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    bucketGet.mockResolvedValue({ body: new Blob([new Uint8Array([1, 2, 3])]).stream() });
+    create.mockResolvedValue({
+      content: [{ type: "text", text: '{"tags":["street"],"location":"Tokyo","caption":"Neon rain."}' }],
+    });
+    const storageKey = "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg";
+    const res = await POST(req({ storageKey }));
+    expect(res.status).toBe(200);
+    expect(bucketGet).toHaveBeenCalledWith(storageKey);
+    expect(imagesInput).toHaveBeenCalled();
+    expect(transformer.transform).toHaveBeenCalledWith({ width: 1280 });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        messages: [
+          expect.objectContaining({
+            content: expect.arrayContaining([
+              expect.objectContaining({
+                type: "image",
+                source: expect.objectContaining({ type: "base64", media_type: "image/jpeg" }),
+              }),
+            ]),
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("returns 404 when the storageKey is not found in R2", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    bucketGet.mockResolvedValue(null);
+    const res = await POST(req({ storageKey: "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg" }));
+    expect(res.status).toBe(404);
+    expect(create).not.toHaveBeenCalled();
   });
 });

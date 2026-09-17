@@ -4,6 +4,8 @@ vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/db", () => ({
   db: { photo: { update: vi.fn(), delete: vi.fn() } },
 }));
+const { bucketDelete } = vi.hoisted(() => ({ bucketDelete: vi.fn() }));
+vi.mock("@/lib/cloudflare", () => ({ getEnv: () => ({ PHOTOS: { delete: bucketDelete } }) }));
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -27,6 +29,7 @@ describe("/api/admin/photo/[id]", () => {
     mockedAuth.mockReset();
     update.mockReset();
     del.mockReset();
+    bucketDelete.mockReset();
   });
 
   it("PATCH rejects unauthenticated requests", async () => {
@@ -66,9 +69,18 @@ describe("/api/admin/photo/[id]", () => {
 
   it("DELETE removes the photo when authenticated", async () => {
     mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
-    del.mockResolvedValue({} as never);
+    del.mockResolvedValue({ storageKey: "photos/k.jpg" } as never);
     const res = await DELETE(new Request("http://localhost"), { params });
     expect(res.status).toBe(200);
     expect(del).toHaveBeenCalledWith({ where: { id: "p1" } });
+    expect(bucketDelete).toHaveBeenCalledWith("photos/k.jpg");
+  });
+
+  it("DELETE skips the bucket when the row has no storageKey", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    del.mockResolvedValue({ storageKey: null } as never);
+    const res = await DELETE(new Request("http://localhost"), { params });
+    expect(res.status).toBe(200);
+    expect(bucketDelete).not.toHaveBeenCalled();
   });
 });

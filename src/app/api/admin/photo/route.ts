@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { apiError, apiOk, handleRouteError } from "@/lib/api";
 import { requireAdmin } from "@/lib/require-admin";
+import { KEY_PATTERN } from "@/lib/image-request";
 
-const REQUIRED = ["title", "slug", "cloudinaryId", "format", "width", "height", "aspectRatio"] as const;
+const REQUIRED = ["title", "slug", "storageKey", "format", "width", "height", "aspectRatio"] as const;
 const VALID_FORMATS = ["DIGITAL", "FILM_35MM", "FILM_120MM"] as const;
 
 export async function POST(request: Request) {
@@ -19,12 +20,20 @@ export async function POST(request: Request) {
     if (!VALID_FORMATS.includes(body.format as (typeof VALID_FORMATS)[number])) {
       return apiError("invalid format", 400);
     }
+    if (!KEY_PATTERN.test(String(body.storageKey))) {
+      return apiError("invalid storageKey", 400);
+    }
 
     const photo = await db.photo.create({
       data: {
         title: String(body.title),
         slug: String(body.slug),
-        cloudinaryId: String(body.cloudinaryId),
+        storageKey: String(body.storageKey),
+        mimeType: (body.mimeType as string | null) ?? null,
+        sizeBytes: body.sizeBytes === undefined || body.sizeBytes === null ? null : Number(body.sizeBytes),
+        blurDataUrl: (body.blurDataUrl as string | null) ?? null,
+        originalFilename: (body.originalFilename as string | null) ?? null,
+        published: body.published == null ? true : Boolean(body.published),
         format: body.format as (typeof VALID_FORMATS)[number],
         width: Number(body.width),
         height: Number(body.height),

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { apiError, apiOk, handleRouteError } from "@/lib/api";
 import { requireAdmin } from "@/lib/require-admin";
 import { pickPhotoFields } from "@/lib/photo-fields";
+import { getEnv } from "@/lib/cloudflare";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -27,7 +28,14 @@ export async function DELETE(_request: Request, { params }: Ctx) {
   if (denied) return denied;
   try {
     const { id } = await params;
-    await db.photo.delete({ where: { id } });
+    const photo = await db.photo.delete({ where: { id } });
+    if (photo.storageKey) {
+      try {
+        await getEnv().PHOTOS.delete(photo.storageKey);
+      } catch (err) {
+        console.error(`[photo] row ${id} deleted but object ${photo.storageKey} was not:`, err);
+      }
+    }
     return apiOk({});
   } catch (err) {
     return handleRouteError(err);

@@ -5,6 +5,7 @@ export const revalidate = 0;
 
 export default async function WorkPage() {
   const photos = await db.photo.findMany({
+    where: { published: true },
     orderBy: { createdAt: "desc" },
   });
 

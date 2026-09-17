@@ -23,7 +23,7 @@ function req(body: unknown) {
 const validBody = {
   title: "Dunes",
   slug: "dunes",
-  cloudinaryId: "canopus/dunes",
+  storageKey: "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg",
   format: "DIGITAL",
   width: 4000,
   height: 2667,
@@ -53,7 +53,12 @@ describe("POST /api/admin/photo", () => {
     expect(json.photo.id).toBe("p1");
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ title: "Dunes", width: 4000 }),
+        data: expect.objectContaining({
+          title: "Dunes",
+          width: 4000,
+          storageKey: "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg",
+          published: true,
+        }),
       }),
     );
   });
@@ -68,6 +73,13 @@ describe("POST /api/admin/photo", () => {
   it("returns 400 for an invalid format", async () => {
     mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
     const res = await POST(req({ ...validBody, format: "FILM_120" }));
+    expect(res.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for an invalid storageKey", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    const res = await POST(req({ ...validBody, storageKey: "evil" }));
     expect(res.status).toBe(400);
     expect(create).not.toHaveBeenCalled();
   });

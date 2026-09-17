@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-fetch";
+import { photoSrc } from "@/lib/photo-url";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,7 +12,8 @@ type Photo = {
   id: string;
   title: string;
   slug: string;
-  cloudinaryId: string;
+  cloudinaryId: string | null;
+  storageKey: string | null;
   format: Format;
   tags: string[];
   featured: boolean;
@@ -46,11 +48,6 @@ type EditState = {
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-
-function cloudinaryThumb(id: string) {
-  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  return `https://res.cloudinary.com/${cloud}/image/upload/w_200,h_200,c_fill,q_auto,f_auto/${id}`;
-}
 
 function photoToEditState(p: Photo): EditState {
   return {
@@ -189,12 +186,15 @@ function PhotoRow({
   const handleAiTag = async () => {
     setAiLoading(true);
     try {
-      const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const imageUrl = `https://res.cloudinary.com/${cloud}/image/upload/${photo.cloudinaryId}`;
+      const body = photo.storageKey
+        ? { storageKey: photo.storageKey }
+        : {
+            imageUrl: `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${photo.cloudinaryId}`,
+          };
       const res = await adminFetch("/api/admin/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("AI tagging failed");
       const suggestion = await res.json();
@@ -230,7 +230,7 @@ function PhotoRow({
         onClick={() => setExpanded((x) => !x)}
       >
         <img
-          src={cloudinaryThumb(photo.cloudinaryId)}
+          src={photoSrc(photo, 320)}
           alt={photo.title}
           style={{
             width: "48px",
@@ -352,7 +352,7 @@ function PhotoRow({
           >
             <div>
               <img
-                src={cloudinaryThumb(photo.cloudinaryId)}
+                src={photoSrc(photo, 320)}
                 alt={photo.title}
                 style={{
                   width: "100%",
@@ -718,15 +718,66 @@ export default function AdminPhotosPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "featured" | "untagged">("all");
+  const [migrating, setMigrating] = useState(false);
+  const [migrateResult, setMigrateResult] = useState<{
+    migrated: number;
+    failed: { id: string; error: string }[];
+    error?: string;
+    batch?: number;
+  } | null>(null);
 
-  useEffect(() => {
-    adminFetch("/api/admin/photos")
+  const loadPhotos = () => {
+    return adminFetch("/api/admin/photos")
       .then((res) => res.json())
       .then((data) => {
         setPhotos(data.photos ?? []);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadPhotos();
   }, []);
+
+  const unmigratedCount = photos.filter((p) => !p.storageKey).length;
+
+  const handleMigrate = async () => {
+    setMigrating(true);
+    setMigrateResult(null);
+    let migrated = 0;
+    let failed: { id: string; error: string }[] = [];
+    let batch = 0;
+    try {
+      let remaining = 0;
+      let lastMigratedCount = 0;
+      do {
+        const res = await adminFetch("/api/admin/migrate-cloudinary", {
+          method: "POST",
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          setMigrateResult({
+            migrated,
+            failed,
+            error: err.error ?? `Request failed (${res.status})`,
+          });
+          break;
+        }
+        const data = await res.json();
+        batch += 1;
+        lastMigratedCount = data.migrated?.length ?? 0;
+        remaining = data.remaining ?? 0;
+        migrated += lastMigratedCount;
+        failed = [...failed, ...(data.failed ?? [])];
+        setMigrateResult({ migrated, failed, batch });
+      } while (remaining > 0 && lastMigratedCount > 0);
+    } catch {
+      setMigrateResult({ migrated, failed, error: "Migration failed" });
+    } finally {
+      setMigrating(false);
+    }
+    await loadPhotos();
+  };
 
   const handleUpdate = (id: string, patch: Partial<Photo>) => {
     setPhotos((prev) =>
@@ -798,7 +849,28 @@ export default function AdminPhotosPage() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            {unmigratedCount > 0 && (
+              <button
+                onClick={handleMigrate}
+                disabled={migrating}
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "9px",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "rgba(240,242,244,0.4)",
+                  background: "transparent",
+                  padding: "0.5rem 0.85rem",
+                  border: "0.5px solid rgba(255,255,255,0.1)",
+                  cursor: migrating ? "not-allowed" : "pointer",
+                }}
+              >
+                {migrating
+                  ? "Migrating…"
+                  : `Migrate from Cloudinary (${unmigratedCount})`}
+              </button>
+            )}
             <a
               href="/admin/bulk_upload"
               style={{
@@ -831,6 +903,48 @@ export default function AdminPhotosPage() {
             </a>
           </div>
         </div>
+
+        {migrateResult && (
+          <div style={{ marginBottom: "1.5rem" }}>
+            <p
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "10px",
+                letterSpacing: "0.1em",
+                color: migrateResult.error
+                  ? "#E07070"
+                  : "rgba(240,242,244,0.4)",
+              }}
+            >
+              {migrateResult.error
+                ? `Migration failed: ${migrateResult.error}`
+                : `Migrated ${migrateResult.migrated}, failed ${migrateResult.failed.length}`}
+            </p>
+            {migrateResult.failed.length > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.2rem",
+                  marginTop: "0.35rem",
+                }}
+              >
+                {migrateResult.failed.map((f) => (
+                  <span
+                    key={f.id}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "9px",
+                      color: "#E07070",
+                    }}
+                  >
+                    {f.id}: {f.error}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div
           style={{

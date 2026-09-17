@@ -1,27 +1,50 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "canopus",
-  "main": ".open-next/worker.js",
-  "compatibility_date": "2026-09-01",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "canopus"
-    }
-  ],
-  "observability": {
-    "enabled": true
-  },
-  "routes": [
-    { "pattern": "bycanopus.com", "custom_domain": true },
-    { "pattern": "www.bycanopus.com", "custom_domain": true }
-  ],
-  "vars": {
-    "NEXTJS_ENV": "production"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "canopus",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-09-01",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "canopus"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "PHOTOS",
+			"bucket_name": "canopus-photos"
+		},
+		{
+			"bucket_name": "canopus-photos",
+			"binding": "canopus_photos",
+			"remote": true
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"routes": [
+		{
+			"pattern": "bycanopus.com",
+			"custom_domain": true
+		},
+		{
+			"pattern": "www.bycanopus.com",
+			"custom_domain": true
+		}
+	],
+	"vars": {
+		"NEXTJS_ENV": "production"
+	}
 }

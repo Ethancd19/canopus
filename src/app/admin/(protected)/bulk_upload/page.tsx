@@ -12,8 +12,12 @@ type PhotoEntry = {
   id: string;
   file: File;
   preview: string;
-  // Cloudinary results
-  cloudinaryId: string;
+  // Storage results
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
+  blurDataUrl: string;
+  originalFilename: string;
   width: number;
   height: number;
   // Editable fields
@@ -84,9 +88,17 @@ async function readExif(file: File) {
   }
 }
 
-async function uploadToCloudinary(
-  file: File,
-): Promise<{ public_id: string; width: number; height: number }> {
+type UploadResult = {
+  storageKey: string;
+  width: number;
+  height: number;
+  mimeType: string;
+  sizeBytes: number;
+  blurDataUrl: string;
+  originalFilename: string;
+};
+
+async function uploadToStorage(file: File): Promise<UploadResult> {
   const compressed = await imageCompression(file, {
     maxSizeMB: 8,
     maxWidthOrHeight: 4000,
@@ -95,20 +107,16 @@ async function uploadToCloudinary(
   });
 
   const formData = new FormData();
-  formData.append("file", compressed);
-  formData.append("upload_preset", "canopus");
-  formData.append("folder", "canopus");
+  formData.append("file", compressed, file.name);
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-    { method: "POST", body: formData },
-  );
+  const res = await adminFetch("/api/admin/uploads", {
+    method: "POST",
+    body: formData,
+  });
 
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err?.error?.message || "Cloudinary upload failed");
-  }
-  return res.json();
+  const data = await res.json();
+  if (!res.ok || !data.ok) throw new Error(data.error ?? "Upload failed");
+  return data as UploadResult;
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -483,7 +491,11 @@ export default function BulkUploadPage() {
             id: crypto.randomUUID(),
             file,
             preview: URL.createObjectURL(file),
-            cloudinaryId: "",
+            storageKey: "",
+            mimeType: "",
+            sizeBytes: 0,
+            blurDataUrl: "",
+            originalFilename: "",
             width: 0,
             height: 0,
             title: makeTitle(file.name),
@@ -525,14 +537,18 @@ export default function BulkUploadPage() {
       setEntries((prev) =>
         prev.map((e) => (e.id === id ? { ...e, uploadState: "uploading" } : e)),
       );
-      const result = await uploadToCloudinary(file);
+      const result = await uploadToStorage(file);
       setEntries((prev) =>
         prev.map((e) =>
           e.id === id
             ? {
                 ...e,
                 uploadState: "done",
-                cloudinaryId: result.public_id,
+                storageKey: result.storageKey,
+                mimeType: result.mimeType,
+                sizeBytes: result.sizeBytes,
+                blurDataUrl: result.blurDataUrl,
+                originalFilename: result.originalFilename,
                 width: result.width,
                 height: result.height,
               }
@@ -575,7 +591,11 @@ export default function BulkUploadPage() {
           body: JSON.stringify({
             title: entry.title,
             slug: entry.slug,
-            cloudinaryId: entry.cloudinaryId,
+            storageKey: entry.storageKey,
+            mimeType: entry.mimeType,
+            sizeBytes: entry.sizeBytes,
+            blurDataUrl: entry.blurDataUrl,
+            originalFilename: entry.originalFilename,
             format: entry.format,
             width: entry.width,
             height: entry.height,

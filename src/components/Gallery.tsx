@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Photo } from "@/types/photo";
 import { ScrambleText } from "motion-plus/react";
+import { photoSrc } from "@/lib/photo-url";
 
 type Format = "DIGITAL" | "FILM_35MM" | "FILM_120MM";
 
@@ -67,11 +68,6 @@ function pickRandom(pool: string[], history: string[], avoidCount = 3): string {
   const available = pool.filter((m) => !recent.includes(m));
   const source = available.length > 0 ? available : pool;
   return source[Math.floor(Math.random() * source.length)];
-}
-
-function cloudinaryUrl(id: string, width = 800) {
-  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  return `https://res.cloudinary.com/${cloud}/image/upload/w_${width},q_auto,f_auto/${id}`;
 }
 
 // ─── Theme-aware color helper ─────────────────────────────────────────────────
@@ -242,7 +238,7 @@ function PhotoCard({
         }}
       >
         <motion.img
-          src={cloudinaryUrl(photo.cloudinaryId)}
+          src={photoSrc(photo, 960)}
           alt={photo.title}
           loading="lazy"
           style={{
@@ -390,7 +386,7 @@ function ExpandedPhoto({
             </span>
           )}
           <img
-            src={cloudinaryUrl(photo.cloudinaryId, 1600)}
+            src={photoSrc(photo, 1920)}
             alt={photo.title}
             onLoad={() => setLoaded(true)}
             style={{

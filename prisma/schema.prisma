@@ -14,7 +14,14 @@ model Photo {
   id String @id @default(cuid())
   title String
   slug String @unique
-  cloudinaryId String
+  // Storage. cloudinaryId is nullable during the migration and dropped afterwards.
+  cloudinaryId     String?
+  storageKey       String?  @unique
+  published        Boolean  @default(true)
+  blurDataUrl      String?
+  mimeType         String?
+  sizeBytes        Int?
+  originalFilename String?
   format Format
   tags String[]
   featured Boolean @default(false)

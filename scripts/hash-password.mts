@@ -8,7 +8,7 @@ rl.on("line", (l) => {
 });
 rl.on("close", async () => {
   if (!line) {
-    console.error("Usage: printf '%s' 'your password' | node scripts/hash-password.ts");
+    console.error("Usage: printf '%s' 'your password' | node scripts/hash-password.mts");
     process.exit(1);
   }
   const hash = await bcrypt.hash(line, 12);

@@ -6,6 +6,16 @@ import imageCompression from "browser-image-compression";
 import exifr from "exifr";
 import { adminFetch } from "@/lib/admin-fetch";
 
+type UploadResult = {
+  storageKey: string;
+  width: number;
+  height: number;
+  mimeType: string;
+  sizeBytes: number;
+  blurDataUrl: string;
+  originalFilename: string;
+};
+
 type ExifData = {
   camera?: string;
   lens?: string;
@@ -38,7 +48,8 @@ export default function UploadPage() {
   const [state, setState] = useState<UploadState>("idle");
   const [error, setError] = useState("");
 
-  const [cloudinaryId, setCloudinaryId] = useState("");
+  const [storageKey, setStorageKey] = useState("");
+  const [stored, setStored] = useState<UploadResult | null>(null);
   const [width, setWidth] = useState(0);
   const [height, setHeight] = useState(0);
 
@@ -106,40 +117,34 @@ export default function UploadPage() {
     [],
   );
 
-  const uploadToCloudinary = async () => {
+  const uploadToStorage = async () => {
     if (!file) throw new Error("No file selected");
-
     const compressed = await imageCompression(file, {
       maxSizeMB: 8,
       maxWidthOrHeight: 4000,
       useWebWorker: true,
       preserveExif: true,
     });
-
     const formData = new FormData();
-    formData.append("file", compressed);
-    formData.append("upload_preset", "canopus");
-    formData.append("folder", "canopus");
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      { method: "POST", body: formData },
-    );
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err?.error?.message ?? "Cloudinary upload failed");
-    }
-    return res.json();
+    formData.append("file", compressed, file.name);
+    const res = await adminFetch("/api/admin/uploads", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error ?? "Upload failed");
+    return data as UploadResult;
   };
 
-  const getAiTags = async (imageUrl: string): Promise<AiSuggestion> => {
+  const getAiTags = async (
+    body: { storageKey: string } | { imageUrl: string },
+  ): Promise<AiSuggestion> => {
     const res = await adminFetch("/api/admin/tags", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ imageUrl }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) throw new Error("AI tag generation failed");
@@ -152,18 +157,16 @@ export default function UploadPage() {
     setError("");
 
     try {
-      console.log("Cloud name:", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME);
-      const uploaded = await uploadToCloudinary();
-      setCloudinaryId(uploaded.public_id);
+      const uploaded = await uploadToStorage();
+      setStored(uploaded);
+      setStorageKey(uploaded.storageKey);
       setWidth(uploaded.width);
       setHeight(uploaded.height);
 
       setState("tagging");
-      const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-      const imageUrl = `https://res.cloudinary.com/${cloud}/image/upload/${uploaded.public_id}`;
 
       try {
-        const suggestion = await getAiTags(imageUrl);
+        const suggestion = await getAiTags({ storageKey: uploaded.storageKey });
         setAiSuggestion(suggestion);
         if (!tags) setTags(suggestion.tags.join(", "));
         if (!location) setLocation(suggestion.location);
@@ -180,7 +183,7 @@ export default function UploadPage() {
   };
 
   const handleSave = async () => {
-    if (!cloudinaryId) return;
+    if (!storageKey || !stored) return;
     setState("saving");
 
     try {
@@ -190,7 +193,11 @@ export default function UploadPage() {
         body: JSON.stringify({
           title,
           slug,
-          cloudinaryId,
+          storageKey,
+          mimeType: stored.mimeType,
+          sizeBytes: stored.sizeBytes,
+          blurDataUrl: stored.blurDataUrl,
+          originalFilename: stored.originalFilename,
           format,
           width,
           height,
@@ -212,7 +219,8 @@ export default function UploadPage() {
       setTimeout(() => {
         setFile(null);
         setPreview(null);
-        setCloudinaryId("");
+        setStorageKey("");
+        setStored(null);
         setTitle("");
         setSlug("");
         setTags("");
@@ -385,7 +393,7 @@ export default function UploadPage() {
           )}
 
           {/* Upload button */}
-          {file && !cloudinaryId && (
+          {file && !storageKey && (
             <button
               onClick={handleUpload}
               disabled={state === "uploading" || state === "tagging"}
@@ -408,11 +416,11 @@ export default function UploadPage() {
                 ? "Uploading..."
                 : state === "tagging"
                   ? "Getting AI tags..."
-                  : "Upload to Cloudinary"}
+                  : "Upload to storage"}
             </button>
           )}
 
-          {cloudinaryId && (
+          {storageKey && (
             <div
               style={{
                 marginTop: "1rem",
@@ -429,7 +437,7 @@ export default function UploadPage() {
                   color: "#5DBB8A",
                 }}
               >
-                Uploaded to Cloudinary
+                Uploaded to storage
               </p>
             </div>
           )}
@@ -655,7 +663,7 @@ export default function UploadPage() {
           </label>
 
           {/* Save button */}
-          {cloudinaryId && (
+          {storageKey && (
             <button
               onClick={handleSave}
               disabled={state === "saving" || state === "done"}

@@ -5,6 +5,7 @@ export const PHOTO_EDITABLE_FIELDS = [
   "tags",
   "featured",
   "order",
+  "published",
   "caption",
   "location",
   "takenAt",

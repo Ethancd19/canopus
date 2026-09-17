@@ -13,8 +13,8 @@
     "lint": "eslint",
     "test": "NODE_OPTIONS=--no-deprecation vitest run",
     "test:watch": "NODE_OPTIONS=--no-deprecation vitest",
-    "hash-password": "node scripts/hash-password.ts",
-    "build:cf": "opennextjs-cloudflare build && node scripts/strip-baked-env.ts && node scripts/check-worker-size.ts",
+    "hash-password": "node scripts/hash-password.mts",
+    "build:cf": "opennextjs-cloudflare build && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/strip-baked-env.mts && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-worker-size.mts",
     "preview": "npm run build:cf && opennextjs-cloudflare preview",
     "deploy": "npm run build:cf && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv --include-runtime=false cloudflare-env.d.ts"
@@ -39,6 +39,8 @@
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.6",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24",
     "@types/react": "^19",
@@ -46,6 +48,7 @@
     "esbuild": "^0.27.7",
     "eslint": "^9",
     "eslint-config-next": "^16.3.5",
+    "jsdom": "^30.1.0",
     "prisma": "^7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",

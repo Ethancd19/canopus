@@ -1,5 +1,23 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400&display=swap");
 
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+@theme {
+  --color-navy: #0e1824;
+  --color-navy-mid: #111f2e;
+  --color-navy-light: #162536;
+  --color-text: #d4dce8;
+  --color-muted: #7a8fa8;
+  --color-faint: #3a5068;
+  --color-copper: #c9a96e;
+  --color-ice: #a8c5da;
+  --color-success: #5dbb8a;
+  --color-danger: #e07070;
+  --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "DM Mono", monospace;
+}
+
 /* ─── Canopus Design Tokens ─────────────────────────────────────────────────── */
 
 :root {

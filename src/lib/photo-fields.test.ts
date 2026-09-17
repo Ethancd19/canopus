@@ -6,11 +6,12 @@ describe("pickPhotoFields", () => {
     const out = pickPhotoFields({
       title: "Dunes",
       featured: true,
+      published: false,
       id: "hacked",
       createdAt: "2020-01-01",
       cloudinaryId: "x",
     });
-    expect(out).toEqual({ title: "Dunes", featured: true });
+    expect(out).toEqual({ title: "Dunes", featured: true, published: false });
   });
 
   it("returns an empty object for non-object input", () => {

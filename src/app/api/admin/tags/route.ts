@@ -2,6 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { apiError, apiOk, handleRouteError } from "@/lib/api";
 import { requireAdmin } from "@/lib/require-admin";
 import { getTaggingModel, parseTagResponse, TAGGING_PROMPT } from "@/lib/tagging";
+import { getEnv } from "@/lib/cloudflare";
+import { KEY_PATTERN } from "@/lib/image-request";
 
 function isHttpsUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
@@ -16,9 +18,19 @@ export async function POST(request: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
   try {
-    const { imageUrl } = (await request.json()) as { imageUrl?: unknown };
-    if (!isHttpsUrl(imageUrl)) {
-      return apiError("imageUrl must be an https URL", 400);
+    const body = (await request.json()) as { imageUrl?: unknown; storageKey?: unknown };
+    let imageBlock: Anthropic.ImageBlockParam;
+    if (typeof body.storageKey === "string" && KEY_PATTERN.test(body.storageKey)) {
+      const env = getEnv();
+      const object = await env.PHOTOS.get(body.storageKey);
+      if (!object) return apiError("photo not found in storage", 404);
+      const out = await env.IMAGES.input(object.body).transform({ width: 1280 }).output({ format: "image/jpeg", quality: 80 });
+      const data = Buffer.from(await new Response(out.image()).arrayBuffer()).toString("base64");
+      imageBlock = { type: "image", source: { type: "base64", media_type: "image/jpeg", data } };
+    } else if (isHttpsUrl(body.imageUrl)) {
+      imageBlock = { type: "image", source: { type: "url", url: body.imageUrl } };
+    } else {
+      return apiError("storageKey or an https imageUrl is required", 400);
     }
 
     const client = new Anthropic();
@@ -29,7 +41,7 @@ export async function POST(request: Request) {
         {
           role: "user",
           content: [
-            { type: "image", source: { type: "url", url: imageUrl } },
+            imageBlock,
             { type: "text", text: TAGGING_PROMPT },
           ],
         },
