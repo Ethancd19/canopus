@@ -9,7 +9,6 @@ export function apiError(message: string, status: number) {
 }
 
 export function handleRouteError(err: unknown) {
-  const message = err instanceof Error ? err.message : String(err);
   console.error("[api] route error:", err);
-  return apiError(message, 500);
+  return apiError("Something went wrong on the server", 500);
 }

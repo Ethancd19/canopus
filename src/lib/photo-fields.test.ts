@@ -9,7 +9,7 @@ describe("pickPhotoFields", () => {
       published: false,
       id: "hacked",
       createdAt: "2020-01-01",
-      cloudinaryId: "x",
+      storageKey: "photos/x.jpg",
     });
     expect(out).toEqual({ title: "Dunes", featured: true, published: false });
   });

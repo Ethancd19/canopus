@@ -37,6 +37,8 @@ function req(body: unknown) {
   });
 }
 
+const storageKey = "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg";
+
 describe("POST /api/admin/tags", () => {
   beforeEach(() => {
     mockedAuth.mockReset();
@@ -49,50 +51,23 @@ describe("POST /api/admin/tags", () => {
 
   it("rejects unauthenticated requests", async () => {
     mockedAuth.mockResolvedValue(null as never);
-    const res = await POST(req({ imageUrl: "https://example.com/a.jpg" }));
+    const res = await POST(req({ storageKey }));
     expect(res.status).toBe(401);
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("rejects a non-https imageUrl", async () => {
+  it("rejects a request without a storageKey", async () => {
     mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
-    const res = await POST(req({ imageUrl: "ftp://example.com/a.jpg" }));
+    const res = await POST(req({}));
     expect(res.status).toBe(400);
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("returns parsed suggestions", async () => {
+  it("rejects an invalid storageKey", async () => {
     mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
-    create.mockResolvedValue({
-      content: [
-        {
-          type: "text",
-          text: '{"tags":["street"],"location":"Tokyo","caption":"Neon rain."}',
-        },
-      ],
-    });
-    const res = await POST(req({ imageUrl: "https://example.com/a.jpg" }));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({
-      ok: true,
-      tags: ["street"],
-      location: "Tokyo",
-      caption: "Neon rain.",
-    });
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        messages: [
-          expect.objectContaining({
-            content: expect.arrayContaining([
-              expect.objectContaining({
-                type: "image",
-                source: { type: "url", url: "https://example.com/a.jpg" },
-              }),
-            ]),
-          }),
-        ],
-      }),
-    );
+    const res = await POST(req({ storageKey: "evil" }));
+    expect(res.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
   });
 
   it("reads a photo from R2 and sends it as a base64 image block", async () => {
@@ -101,9 +76,14 @@ describe("POST /api/admin/tags", () => {
     create.mockResolvedValue({
       content: [{ type: "text", text: '{"tags":["street"],"location":"Tokyo","caption":"Neon rain."}' }],
     });
-    const storageKey = "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg";
     const res = await POST(req({ storageKey }));
     expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      ok: true,
+      tags: ["street"],
+      location: "Tokyo",
+      caption: "Neon rain.",
+    });
     expect(bucketGet).toHaveBeenCalledWith(storageKey);
     expect(imagesInput).toHaveBeenCalled();
     expect(transformer.transform).toHaveBeenCalledWith({ width: 1280 });
@@ -126,7 +106,7 @@ describe("POST /api/admin/tags", () => {
   it("returns 404 when the storageKey is not found in R2", async () => {
     mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
     bucketGet.mockResolvedValue(null);
-    const res = await POST(req({ storageKey: "photos/0b2b8a6e-1d4f-4c1e-9b2a-3f9e8d7c6b5a.jpg" }));
+    const res = await POST(req({ storageKey }));
     expect(res.status).toBe(404);
     expect(create).not.toHaveBeenCalled();
   });

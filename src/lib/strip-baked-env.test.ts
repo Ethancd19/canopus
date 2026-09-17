@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { stripSecrets } from "@/lib/strip-baked-env";
 
 const source = [
-  'export const production = {"ANTHROPIC_API_KEY":"secret-a","NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME":"canopus"};',
-  'export const development = {"DATABASE_URL":"secret-b","NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME":"canopus"};',
+  'export const production = {"ANTHROPIC_API_KEY":"secret-a","NEXT_PUBLIC_SITE_NAME":"canopus"};',
+  'export const development = {"DATABASE_URL":"secret-b","NEXT_PUBLIC_SITE_NAME":"canopus"};',
   "export const test = {};",
   "",
 ].join("\n");
@@ -14,8 +14,8 @@ describe("stripSecrets", () => {
 
     expect(output).toBe(
       [
-        'export const production = {"NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME":"canopus"};',
-        'export const development = {"NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME":"canopus"};',
+        'export const production = {"NEXT_PUBLIC_SITE_NAME":"canopus"};',
+        'export const development = {"NEXT_PUBLIC_SITE_NAME":"canopus"};',
         "export const test = {};",
         "",
       ].join("\n"),

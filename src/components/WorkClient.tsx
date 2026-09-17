@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import Nav from "@/components/Nav";
 import Gallery from "@/components/Gallery";
+import { Footer } from "@/components/Footer";
 import { Photo } from "@/types/photo";
 
 export default function WorkClient({ photos }: { photos: Photo[] }) {
@@ -52,6 +53,8 @@ export default function WorkClient({ photos }: { photos: Photo[] }) {
           <Gallery photos={photos} />
         </motion.div>
       </section>
+
+      <Footer />
     </div>
   );
 }

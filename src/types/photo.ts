@@ -5,7 +5,6 @@ export type Photo = Pick<
   | "id"
   | "title"
   | "slug"
-  | "cloudinaryId"
   | "storageKey"
   | "blurDataUrl"
   | "format"

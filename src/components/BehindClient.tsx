@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Nav from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 
 type Section = "gear" | "process" | "influences";
 
@@ -467,6 +468,8 @@ export default function BehindClient() {
           {activeTab === "influences" && <InfluencesSection />}
         </AnimatePresence>
       </div>
+
+      <Footer />
     </div>
   );
 }

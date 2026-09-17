@@ -41,8 +41,13 @@ The test scripts pass `--no-deprecation` to hide Node's DEP0205 warning emitted 
 
 ## Admin
 
-- `/admin/login` is public. Everything else under `/admin` requires a session.
+- `/admin/login` is public. Everything else under `/admin` requires a session. Sign out is in the sidebar.
 - Every `/api/admin/*` route returns `401 { ok: false, error: "unauthorized" }` without a session.
+- Two pages:
+  - **Library** (`/admin`): Search, filter, and browse the photo grid. Edit captions and tags in a drawer. Publish, unpublish, or delete photos.
+  - **Upload** (`/admin/upload`): Drop a batch of photos, view EXIF data, add AI-suggested tags with inline edits. Photos land as unpublished drafts by default; publish per photo or all at once.
+- Drafts are visible only in the library, not on public pages. Publish photos before they appear on `/work` or `/`.
+- The footer on every public page links to `/admin`.
 - Uploads go to Cloudflare R2 and are served from `/img/<key>?w=<width>`; see the walkthrough's Storage section.
 
 ## Deploy

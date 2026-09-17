@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Gallery from "@/components/Gallery";
+import { Footer } from "@/components/Footer";
 import { Photo } from "@/types/photo";
 
 export default function HomeClient({ photos }: { photos: Photo[] }) {
@@ -250,6 +251,8 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
           <Gallery photos={photos} theme="light" />
         </motion.div>
       </section>
+
+      <Footer tone="light" />
     </motion.div>
   );
 }

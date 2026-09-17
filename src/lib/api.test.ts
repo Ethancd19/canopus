@@ -23,17 +23,18 @@ describe("apiError", () => {
 });
 
 describe("handleRouteError", () => {
-  it("maps Error instances to a 500 with the message", async () => {
+  it("logs the error and returns a generic 500 without echoing the message", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = handleRouteError(new Error("boom"));
     expect(res.status).toBe(500);
-    expect(await res.json()).toEqual({ ok: false, error: "boom" });
-    expect(spy).toHaveBeenCalled();
+    expect(await res.json()).toEqual({ ok: false, error: "Something went wrong on the server" });
+    expect(spy).toHaveBeenCalledWith("[api] route error:", expect.any(Error));
   });
 
-  it("stringifies non-Error values", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  it("does the same for non-Error values, without leaking their content", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = handleRouteError("weird");
-    expect(await res.json()).toEqual({ ok: false, error: "weird" });
+    expect(await res.json()).toEqual({ ok: false, error: "Something went wrong on the server" });
+    expect(spy).toHaveBeenCalledWith("[api] route error:", "weird");
   });
 });

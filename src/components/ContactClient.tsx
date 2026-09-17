@@ -9,6 +9,7 @@ import {
 } from "motion/react";
 import { ScrambleText } from "motion-plus/react";
 import Nav from "@/components/Nav";
+import { Footer } from "@/components/Footer";
 
 type FormState = "idle" | "sending" | "sent" | "error";
 
@@ -712,6 +713,8 @@ export default function ContactClient() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
