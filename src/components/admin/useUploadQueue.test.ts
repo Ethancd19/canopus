@@ -16,12 +16,13 @@ const uploadPhotoMock = vi.fn();
 const patchPhotoMock = vi.fn();
 const deletePhotoMock = vi.fn();
 const tagPhotoMock = vi.fn();
+const listPhotosMock = vi.fn();
 vi.mock("@/lib/admin-api", () => ({
   uploadPhoto: (...args: unknown[]) => uploadPhotoMock(...args),
   patchPhoto: (...args: unknown[]) => patchPhotoMock(...args),
   deletePhoto: (...args: unknown[]) => deletePhotoMock(...args),
   tagPhoto: (...args: unknown[]) => tagPhotoMock(...args),
-  listPhotos: vi.fn(),
+  listPhotos: (...args: unknown[]) => listPhotosMock(...args),
 }));
 
 import { useUploadQueue } from "@/components/admin/useUploadQueue";
@@ -50,6 +51,57 @@ beforeEach(() => {
   (globalThis.URL as unknown as { createObjectURL: () => string }).createObjectURL = vi.fn(() => "blob:mock");
   (globalThis.URL as unknown as { revokeObjectURL: () => void }).revokeObjectURL = vi.fn();
   tagPhotoMock.mockResolvedValue({ ok: true, tags: [], location: "", caption: "" });
+  listPhotosMock.mockReset();
+  listPhotosMock.mockResolvedValue({ ok: true, photos: [] });
+});
+
+describe("useUploadQueue tag suggestions", () => {
+  it("starts with the default TAG_OPTIONS before the fetch resolves", () => {
+    listPhotosMock.mockReturnValue(new Promise(() => {}));
+    const { result } = renderHook(() => useUploadQueue());
+    expect(result.current.tagSuggestions).toContain("landscape");
+  });
+
+  it("merges tags from listPhotos() into TAG_OPTIONS, deduped and sorted case-insensitively", async () => {
+    listPhotosMock.mockResolvedValue({
+      ok: true,
+      photos: [
+        makePhoto({ tags: ["Zebra", "landscape"] }),
+        makePhoto({ tags: ["apple", "zebra"] }),
+      ],
+    });
+    const { result } = renderHook(() => useUploadQueue());
+
+    await waitFor(() => {
+      expect(result.current.tagSuggestions).toContain("apple");
+    });
+
+    const suggestions = result.current.tagSuggestions;
+    expect(suggestions.filter((t) => t.toLowerCase() === "zebra")).toHaveLength(1);
+    expect(suggestions.filter((t) => t.toLowerCase() === "landscape")).toHaveLength(1);
+    const sorted = [...suggestions].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    expect(suggestions).toEqual(sorted);
+  });
+
+  it("keeps the default suggestions when listPhotos() fails", async () => {
+    listPhotosMock.mockRejectedValue(new Error("network down"));
+    const { result } = renderHook(() => useUploadQueue());
+
+    await waitFor(() => {
+      expect(listPhotosMock).toHaveBeenCalled();
+    });
+    expect(result.current.tagSuggestions).toContain("landscape");
+  });
+
+  it("keeps the default suggestions when listPhotos() reports ok: false", async () => {
+    listPhotosMock.mockResolvedValue({ ok: false, error: "nope" });
+    const { result } = renderHook(() => useUploadQueue());
+
+    await waitFor(() => {
+      expect(listPhotosMock).toHaveBeenCalled();
+    });
+    expect(result.current.tagSuggestions).toEqual(expect.arrayContaining(["landscape"]));
+  });
 });
 
 describe("useUploadQueue", () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 
 type Props = {
   open: boolean;
@@ -9,9 +9,19 @@ type Props = {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Bubbles up every keydown fired anywhere inside the panel (title bar, body, or footer). */
+  onKeyDown?: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
-export function Drawer({ open, onClose, title, children, footer }: Props) {
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getFocusable(panel: HTMLElement | null): HTMLElement[] {
+  if (!panel) return [];
+  return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+}
+
+export function Drawer({ open, onClose, title, children, footer, onKeyDown }: Props) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
@@ -26,7 +36,8 @@ export function Drawer({ open, onClose, title, children, footer }: Props) {
     if (!open) return;
 
     previouslyFocused.current = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
+    const focusable = getFocusable(panelRef.current);
+    (focusable[0] ?? panelRef.current)?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -37,12 +48,39 @@ export function Drawer({ open, onClose, title, children, footer }: Props) {
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      previouslyFocused.current?.focus();
     };
   }, [open]);
 
+  const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Tab") {
+      const focusable = getFocusable(panelRef.current);
+      if (focusable.length === 0) {
+        e.preventDefault();
+      } else {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    onKeyDown?.(e);
+  };
+
+  const handleExitComplete = () => {
+    // The opener may have been removed while the drawer was open (e.g. a
+    // deleted library tile); only restore focus to something still in the DOM.
+    const target = previouslyFocused.current;
+    if (target?.isConnected) target.focus();
+  };
+
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={handleExitComplete}>
       {open && (
         <>
           <motion.div
@@ -59,6 +97,7 @@ export function Drawer({ open, onClose, title, children, footer }: Props) {
             key="panel"
             ref={panelRef}
             role="dialog"
+            onKeyDown={handlePanelKeyDown}
             aria-modal="true"
             aria-labelledby={titleId}
             tabIndex={-1}
@@ -76,7 +115,7 @@ export function Drawer({ open, onClose, title, children, footer }: Props) {
                 type="button"
                 onClick={onClose}
                 aria-label="Close"
-                className="text-muted hover:text-text font-mono text-[13px]"
+                className="border-0 bg-transparent p-0 font-mono text-[13px] text-muted hover:text-text"
               >
                 ×
               </button>

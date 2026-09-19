@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PhotoDrawer } from "@/components/admin/PhotoDrawer";
 import type { Photo } from "@/lib/admin-api";
 
@@ -144,5 +144,104 @@ describe("PhotoDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Publish" }));
 
     await screen.findByText("Couldn't publish: server hiccup");
+  });
+
+  it("regenerates the slug from the current title", () => {
+    const photo = makePhoto({ title: "Original title", slug: "original-title" });
+    render(
+      <PhotoDrawer
+        photo={photo}
+        onClose={vi.fn()}
+        onSave={vi.fn().mockResolvedValue(okResult)}
+        onDelete={vi.fn().mockResolvedValue(okResult)}
+        onTogglePublished={vi.fn().mockResolvedValue(okResult)}
+      />,
+    );
+
+    const titleInput = screen.getByLabelText("Title") as HTMLInputElement;
+    fireEvent.change(titleInput, { target: { value: "Brand New Title" } });
+    fireEvent.blur(titleInput);
+
+    fireEvent.click(screen.getByRole("button", { name: "Regenerate from title" }));
+
+    expect((screen.getByLabelText("Slug") as HTMLInputElement).value).toBe("brand-new-title");
+  });
+
+  describe("copy image URL", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("copies the derived image URL and flashes 'Copied' for 1500ms", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.assign(navigator, { clipboard: { writeText } });
+      const photo = makePhoto({ storageKey: "photos/a.jpg" });
+      render(
+        <PhotoDrawer
+          photo={photo}
+          onClose={vi.fn()}
+          onSave={vi.fn().mockResolvedValue(okResult)}
+          onDelete={vi.fn().mockResolvedValue(okResult)}
+          onTogglePublished={vi.fn().mockResolvedValue(okResult)}
+        />,
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Copy image URL" }));
+      });
+
+      expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/img/photos/a.jpg?w=1920`);
+      expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1500);
+      });
+
+      expect(screen.getByRole("button", { name: "Copy image URL" })).toBeInTheDocument();
+    });
+
+    it("shows \"Couldn't copy\" when the clipboard write rejects", async () => {
+      const writeText = vi.fn().mockRejectedValue(new Error("denied"));
+      Object.assign(navigator, { clipboard: { writeText } });
+      const photo = makePhoto();
+      render(
+        <PhotoDrawer
+          photo={photo}
+          onClose={vi.fn()}
+          onSave={vi.fn().mockResolvedValue(okResult)}
+          onDelete={vi.fn().mockResolvedValue(okResult)}
+          onTogglePublished={vi.fn().mockResolvedValue(okResult)}
+        />,
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Copy image URL" }));
+      });
+
+      expect(screen.getByRole("button", { name: "Couldn't copy" })).toBeInTheDocument();
+    });
+  });
+
+  it("toggles publish on Cmd/Ctrl+Enter anywhere inside the drawer", async () => {
+    const photo = makePhoto({ published: false });
+    const onTogglePublished = vi.fn().mockResolvedValue(okResult);
+    render(
+      <PhotoDrawer
+        photo={photo}
+        onClose={vi.fn()}
+        onSave={vi.fn().mockResolvedValue(okResult)}
+        onDelete={vi.fn().mockResolvedValue(okResult)}
+        onTogglePublished={onTogglePublished}
+      />,
+    );
+
+    const titleInput = screen.getByLabelText("Title");
+    fireEvent.keyDown(titleInput, { key: "Enter", metaKey: true });
+
+    expect(onTogglePublished).toHaveBeenCalledTimes(1);
   });
 });

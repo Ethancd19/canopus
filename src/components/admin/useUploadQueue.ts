@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
 import { mapExif } from "@/lib/exif";
+import { TAG_OPTIONS } from "@/lib/tagging";
 import {
   deletePhoto,
+  listPhotos,
   patchPhoto,
   tagPhoto,
   uploadPhoto,
@@ -66,6 +68,7 @@ function nextLocalId(): string {
 export function useUploadQueue() {
   const storeRef = useRef<QueueItem[]>([]);
   const [items, setItems] = useState<QueueItem[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([...TAG_OPTIONS]);
   const activeCountRef = useRef(0);
   // Tracks the pending "saved" flash timeout per item so it (and any other
   // timer keyed by localId) can be cleared on unmount instead of firing a
@@ -77,6 +80,38 @@ export function useUploadQueue() {
     return () => {
       for (const timer of timers.values()) clearTimeout(timer);
       timers.clear();
+    };
+  }, []);
+
+  // Widens the tag autocomplete with whatever tags already exist in the
+  // library, in addition to the fixed TAG_OPTIONS list - failures here are
+  // non-fatal, the upload queue works fine with just TAG_OPTIONS.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await listPhotos();
+        if (cancelled || !result.ok) return;
+        // Dedupe case-insensitively (photo tags are normally already
+        // lowercase, but don't let a stray differently-cased tag double up).
+        const merged = new Map<string, string>();
+        for (const tag of TAG_OPTIONS) merged.set(tag.toLowerCase(), tag);
+        for (const photo of result.photos) {
+          for (const tag of photo.tags) {
+            const key = tag.toLowerCase();
+            if (!merged.has(key)) merged.set(key, tag);
+          }
+        }
+        const sorted = [...merged.values()].sort((a, b) =>
+          a.localeCompare(b, undefined, { sensitivity: "base" }),
+        );
+        setTagSuggestions(sorted);
+      } catch {
+        // Non-fatal: keep the default TAG_OPTIONS suggestions.
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
   }, []);
 
@@ -326,5 +361,5 @@ export function useUploadQueue() {
     [findItem, patchItem, flashSaved],
   );
 
-  return { items, add, retry, remove, uploadAnyway, publish, publishAll, updatePhoto };
+  return { items, add, retry, remove, uploadAnyway, publish, publishAll, updatePhoto, tagSuggestions };
 }

@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { getEnv } from "@/lib/cloudflare";
 import { isAcceptedType, MAX_UPLOAD_BYTES, storeImage } from "@/lib/storage";
 import { db } from "@/lib/db";
-import { slugify, titleFromFilename, uniqueSlug } from "@/lib/slug";
+import { isSlugConflict, slugify, titleFromFilename, uniqueSlug } from "@/lib/slug";
 
 const VALID_FORMATS = ["DIGITAL", "FILM_35MM", "FILM_120MM"] as const;
 type PhotoFormat = (typeof VALID_FORMATS)[number];
@@ -14,13 +14,6 @@ const EXIF_TEXT_FIELDS = ["camera", "lens", "focalLength", "aperture", "shutterS
 function textField(form: FormData, key: string): string | undefined {
   const value = form.get(key);
   return typeof value === "string" && value !== "" ? value : undefined;
-}
-
-/** True for a Prisma unique-constraint violation on the `slug` column. */
-function isSlugConflict(err: unknown): boolean {
-  if (typeof err !== "object" || err === null) return false;
-  const e = err as { code?: unknown; meta?: { target?: unknown } };
-  return e.code === "P2002" && Array.isArray(e.meta?.target) && e.meta.target.includes("slug");
 }
 
 export async function POST(request: Request) {

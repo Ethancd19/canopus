@@ -22,7 +22,7 @@ export function Toggle({ checked, onChange, label, disabled = false, tone = "ice
         aria-label={label}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative h-5 w-9 rounded-full transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`relative h-5 w-9 rounded-full border-0 p-0 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
           checked ? TONE_ON[tone] : "bg-faint"
         }`}
       >

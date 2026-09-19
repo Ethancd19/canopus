@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slugify, titleFromFilename, uniqueSlug } from "@/lib/slug";
+import { isSlugConflict, slugify, titleFromFilename, uniqueSlug } from "@/lib/slug";
 
 describe("titleFromFilename", () => {
   it("strips the extension and replaces separators with spaces", () => {
@@ -44,5 +44,23 @@ describe("uniqueSlug", () => {
   it("gives up after 50 tries", async () => {
     const exists = async () => true;
     await expect(uniqueSlug("dunes", exists)).rejects.toThrow();
+  });
+});
+
+describe("isSlugConflict", () => {
+  it("is true for a P2002 error whose target includes slug", () => {
+    expect(isSlugConflict({ code: "P2002", meta: { target: ["slug"] } })).toBe(true);
+    expect(isSlugConflict({ code: "P2002", meta: { target: ["title", "slug"] } })).toBe(true);
+  });
+
+  it("is false for a P2002 error on a different column", () => {
+    expect(isSlugConflict({ code: "P2002", meta: { target: ["storageKey"] } })).toBe(false);
+  });
+
+  it("is false for a non-P2002 error, or a non-object value", () => {
+    expect(isSlugConflict(new Error("db down"))).toBe(false);
+    expect(isSlugConflict({ code: "P2025" })).toBe(false);
+    expect(isSlugConflict(null)).toBe(false);
+    expect(isSlugConflict("nope")).toBe(false);
   });
 });

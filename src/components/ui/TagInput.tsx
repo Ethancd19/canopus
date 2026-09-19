@@ -63,7 +63,7 @@ export function TagInput({ value, onChange, suggestions, placeholder, id }: Prop
               type="button"
               aria-label={`Remove ${tag}`}
               onClick={() => removeTag(tag)}
-              className="text-faint hover:text-text"
+              className="border-0 bg-transparent p-0 text-faint hover:text-text"
             >
               ×
             </button>
@@ -86,7 +86,7 @@ export function TagInput({ value, onChange, suggestions, placeholder, id }: Prop
               <button
                 type="button"
                 onClick={() => addTag(s)}
-                className="text-[12px] text-muted hover:text-text px-1.5 py-0.5 rounded-sm border border-text/10"
+                className="rounded-sm border border-text/10 bg-transparent px-1.5 py-0.5 text-[12px] text-muted hover:text-text"
               >
                 {s}
               </button>

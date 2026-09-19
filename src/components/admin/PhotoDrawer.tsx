@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 import { PhotoFields } from "@/components/admin/PhotoFields";
 import { photoSrc } from "@/lib/photo-url";
 import type { PatchPhotoInput, Photo } from "@/lib/admin-api";
+
+const COPY_FLASH_MS = 1500;
 
 type ActionResult = { ok: boolean; error?: string };
 
@@ -37,6 +39,14 @@ export function PhotoDrawer({ photo, onClose, onSave, onDelete, onTogglePublishe
   const [footerMode, setFooterMode] = useState<FooterMode>("default");
   const [pending, setPending] = useState<PatchPhotoInput>({});
   const [footerError, setFooterError] = useState<string | null>(null);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const open = photo !== null;
 
@@ -97,6 +107,31 @@ export function PhotoDrawer({ photo, onClose, onSave, onDelete, onTogglePublishe
       const result = await onTogglePublished();
       setFooterError(result.ok ? null : `Couldn't ${action}: ${result.error}`);
     })();
+  };
+
+  const handleCopyUrl = () => {
+    if (!displayPhoto) return;
+    const url = `${window.location.origin}/img/${displayPhoto.storageKey}?w=1920`;
+    navigator.clipboard.writeText(url).then(
+      () => {
+        setCopyState("copied");
+        if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = setTimeout(() => {
+          copyTimerRef.current = null;
+          setCopyState("idle");
+        }, COPY_FLASH_MS);
+      },
+      () => {
+        setCopyState("error");
+      },
+    );
+  };
+
+  const handlePanelKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      handleTogglePublished();
+    }
   };
 
   const handleSaveRef = useRef(handleSave);
@@ -195,14 +230,27 @@ export function PhotoDrawer({ photo, onClose, onSave, onDelete, onTogglePublishe
     </div>
   );
 
+  const copyLabel = copyState === "copied" ? "Copied" : copyState === "error" ? "Couldn't copy" : "Copy image URL";
+
   return (
-    <Drawer open={open} onClose={handleRequestClose} title={displayPhoto.title} footer={footer}>
+    <Drawer
+      open={open}
+      onClose={handleRequestClose}
+      title={displayPhoto.title}
+      footer={footer}
+      onKeyDown={handlePanelKeyDown}
+    >
       <div className="flex flex-col gap-5">
         <div
           className="aspect-[3/2] w-full rounded-sm overflow-hidden bg-navy-light bg-cover bg-center"
           style={displayPhoto.blurDataUrl ? { backgroundImage: `url(${displayPhoto.blurDataUrl})` } : undefined}
         >
           <img src={photoSrc(displayPhoto, 960)} alt="" className="h-full w-full object-cover" />
+        </div>
+        <div className="flex justify-end">
+          <Button type="button" variant="ghost" size="sm" onClick={handleCopyUrl}>
+            {copyLabel}
+          </Button>
         </div>
         <PhotoFields photo={draft} onChange={handleFieldChange} suggestions={suggestions} />
       </div>

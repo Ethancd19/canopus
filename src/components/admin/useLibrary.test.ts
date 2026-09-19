@@ -5,10 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const listPhotosMock = vi.fn();
 const patchPhotoMock = vi.fn();
 const deletePhotoMock = vi.fn();
+const bulkPhotosMock = vi.fn();
 vi.mock("@/lib/admin-api", () => ({
   listPhotos: (...args: unknown[]) => listPhotosMock(...args),
   patchPhoto: (...args: unknown[]) => patchPhotoMock(...args),
   deletePhoto: (...args: unknown[]) => deletePhotoMock(...args),
+  bulkPhotos: (...args: unknown[]) => bulkPhotosMock(...args),
 }));
 
 import { useLibrary } from "@/components/admin/useLibrary";
@@ -34,6 +36,7 @@ beforeEach(() => {
   listPhotosMock.mockReset();
   patchPhotoMock.mockReset();
   deletePhotoMock.mockReset();
+  bulkPhotosMock.mockReset();
   window.localStorage.clear();
 });
 
@@ -288,5 +291,164 @@ describe("useLibrary", () => {
 
     expect(result.current.allTags).toContain("custom-tag");
     expect(result.current.allTags).toContain("landscape");
+  });
+
+  describe("selection", () => {
+    async function setupFive() {
+      const photos = [
+        makePhoto({ id: "a" }),
+        makePhoto({ id: "b" }),
+        makePhoto({ id: "c" }),
+        makePhoto({ id: "d" }),
+        makePhoto({ id: "e" }),
+      ];
+      listPhotosMock.mockResolvedValue({ ok: true, photos });
+      const { result } = renderHook(() => useLibrary());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      return result;
+    }
+
+    it("toggleSelected adds and removes an id", async () => {
+      const result = await setupFive();
+
+      act(() => result.current.toggleSelected("b"));
+      expect(result.current.selected).toEqual(new Set(["b"]));
+
+      act(() => result.current.toggleSelected("b"));
+      expect(result.current.selected).toEqual(new Set());
+    });
+
+    it("shift-range selects every id between the anchor and the target in filtered order", async () => {
+      const result = await setupFive();
+
+      act(() => result.current.toggleSelected("b"));
+      act(() => result.current.toggleSelected("d", { range: true }));
+
+      expect(result.current.selected).toEqual(new Set(["b", "c", "d"]));
+    });
+
+    it("shift-range works regardless of direction (target before the anchor)", async () => {
+      const result = await setupFive();
+
+      act(() => result.current.toggleSelected("d"));
+      act(() => result.current.toggleSelected("b", { range: true }));
+
+      expect(result.current.selected).toEqual(new Set(["b", "c", "d"]));
+    });
+
+    it("selectAllFiltered selects every currently filtered id", async () => {
+      const result = await setupFive();
+
+      act(() => result.current.selectAllFiltered());
+      expect(result.current.selected).toEqual(new Set(["a", "b", "c", "d", "e"]));
+    });
+
+    it("clearSelection empties the selection", async () => {
+      const result = await setupFive();
+
+      act(() => result.current.selectAllFiltered());
+      act(() => result.current.clearSelection());
+      expect(result.current.selected).toEqual(new Set());
+    });
+
+    it("bulk() calls bulkPhotos with the selected ids, reloads, clears selection, and sets a success message", async () => {
+      const result = await setupFive();
+      act(() => {
+        result.current.toggleSelected("a");
+        result.current.toggleSelected("c");
+      });
+      const epochBefore = result.current.selectionEpoch;
+      bulkPhotosMock.mockResolvedValue({ ok: true, count: 2 });
+      listPhotosMock.mockResolvedValue({
+        ok: true,
+        photos: [makePhoto({ id: "a", published: true }), makePhoto({ id: "c", published: true })],
+      });
+
+      let bulkResult!: { ok: boolean; count?: number; error?: string };
+      await act(async () => {
+        bulkResult = await result.current.bulk("publish");
+      });
+
+      expect(bulkPhotosMock).toHaveBeenCalledWith(["a", "c"], "publish", undefined);
+      expect(bulkResult).toEqual({ ok: true, count: 2 });
+      expect(result.current.selected).toEqual(new Set());
+      expect(listPhotosMock).toHaveBeenCalledTimes(2); // initial load + reload
+      expect(result.current.bulkMessage).toEqual({ tone: "ok", text: "Published 2 photos" });
+      expect(result.current.selectionEpoch).toBe(epochBefore + 1);
+    });
+
+    it("bulk() passes payload through and surfaces an error without clearing selection or bumping the epoch", async () => {
+      const result = await setupFive();
+      act(() => result.current.toggleSelected("a"));
+      const epochBefore = result.current.selectionEpoch;
+      bulkPhotosMock.mockResolvedValue({ ok: false, error: "server exploded" });
+
+      let bulkResult!: { ok: boolean; count?: number; error?: string };
+      await act(async () => {
+        bulkResult = await result.current.bulk("addTag", { tag: "golden hour" });
+      });
+
+      expect(bulkPhotosMock).toHaveBeenCalledWith(["a"], "addTag", { tag: "golden hour" });
+      expect(bulkResult).toEqual({ ok: false, error: "server exploded" });
+      expect(result.current.selected).toEqual(new Set(["a"]));
+      expect(result.current.bulkMessage).toEqual({ tone: "error", text: "Couldn't add tag: server exploded" });
+      expect(result.current.selectionEpoch).toBe(epochBefore);
+    });
+
+    it("clearBulkMessage clears the message", async () => {
+      const result = await setupFive();
+      act(() => result.current.toggleSelected("a"));
+      bulkPhotosMock.mockResolvedValue({ ok: false, error: "nope" });
+      await act(async () => {
+        await result.current.bulk("publish");
+      });
+      expect(result.current.bulkMessage).not.toBeNull();
+
+      act(() => result.current.clearBulkMessage());
+      expect(result.current.bulkMessage).toBeNull();
+    });
+
+    it("toggleSelected clears any existing bulk message", async () => {
+      const result = await setupFive();
+      act(() => result.current.toggleSelected("a"));
+      bulkPhotosMock.mockResolvedValue({ ok: false, error: "nope" });
+      await act(async () => {
+        await result.current.bulk("publish");
+      });
+      expect(result.current.bulkMessage).not.toBeNull();
+
+      act(() => result.current.toggleSelected("b"));
+      expect(result.current.bulkMessage).toBeNull();
+    });
+
+    it("remove() prunes the deleted id out of the selection", async () => {
+      const result = await setupFive();
+      act(() => {
+        result.current.toggleSelected("a");
+        result.current.toggleSelected("b");
+      });
+      deletePhotoMock.mockResolvedValue({ ok: true });
+
+      await act(async () => {
+        await result.current.remove("a");
+      });
+
+      expect(result.current.selected).toEqual(new Set(["b"]));
+    });
+
+    it("reload() prunes selected ids that are no longer present in the loaded photos", async () => {
+      const result = await setupFive();
+      act(() => {
+        result.current.toggleSelected("a");
+        result.current.toggleSelected("b");
+      });
+
+      listPhotosMock.mockResolvedValue({ ok: true, photos: [makePhoto({ id: "b" })] });
+      await act(async () => {
+        await result.current.reload();
+      });
+
+      expect(result.current.selected).toEqual(new Set(["b"]));
+    });
   });
 });

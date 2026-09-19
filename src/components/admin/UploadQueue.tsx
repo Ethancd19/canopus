@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PhotoFields } from "@/components/admin/PhotoFields";
 import { useUploadQueue, type QueueItem } from "@/components/admin/useUploadQueue";
-import { TAG_OPTIONS } from "@/lib/tagging";
 import type { PatchPhotoInput } from "@/lib/admin-api";
 
 const DEBOUNCE_MS = 500;
@@ -30,7 +29,8 @@ const PROGRESS_LABEL: Partial<Record<QueueItem["status"], string>> = {
 const ACCEPT = "image/jpeg,image/png,image/webp";
 
 export function UploadQueue() {
-  const { items, add, retry, remove, uploadAnyway, publish, publishAll, updatePhoto } = useUploadQueue();
+  const { items, add, retry, remove, uploadAnyway, publish, publishAll, updatePhoto, tagSuggestions } =
+    useUploadQueue();
   const readyCount = items.filter((item) => item.status === "ready").length;
 
   return (
@@ -64,6 +64,7 @@ export function UploadQueue() {
               <QueueRow
                 key={item.localId}
                 item={item}
+                tagSuggestions={tagSuggestions}
                 onRetry={() => retry(item.localId)}
                 onUploadAnyway={() => uploadAnyway(item.localId)}
                 onRemove={() => void remove(item.localId)}
@@ -80,6 +81,7 @@ export function UploadQueue() {
 
 function QueueRow({
   item,
+  tagSuggestions,
   onRetry,
   onUploadAnyway,
   onRemove,
@@ -87,6 +89,7 @@ function QueueRow({
   onFieldChange,
 }: {
   item: QueueItem;
+  tagSuggestions: string[];
   onRetry: () => void;
   onUploadAnyway: () => void;
   onRemove: () => void;
@@ -134,7 +137,7 @@ function QueueRow({
 
       <div className="flex-1 min-w-0">
         {item.photo ? (
-          <PhotoFields photo={item.photo} onChange={handleFieldChange} suggestions={[...TAG_OPTIONS]} />
+          <PhotoFields photo={item.photo} onChange={handleFieldChange} suggestions={tagSuggestions} />
         ) : (
           <div className="flex flex-col gap-1">
             <p className="font-mono text-[13px] text-text truncate">{item.file.name}</p>

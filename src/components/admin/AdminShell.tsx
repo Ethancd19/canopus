@@ -10,6 +10,8 @@ import { signOutAction } from "@/app/admin/actions";
 const NAV_LINKS = [
   { label: "Library", href: "/admin" },
   { label: "Upload", href: "/admin/upload" },
+  { label: "Featured", href: "/admin/featured" },
+  { label: "Collections", href: "/admin/collections" },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
@@ -27,7 +29,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
         <nav className="flex flex-col gap-3">
           {NAV_LINKS.map(({ label, href }) => {
-            const active = pathname === href;
+            const active = pathname === href || (href !== "/admin" && pathname.startsWith(href + "/"));
             return (
               <Link
                 key={href}

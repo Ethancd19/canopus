@@ -156,7 +156,7 @@ model CollectionPhoto {
 }
 ```
 
-Public presentation of collections is designed in the public-site phase.
+Decided 2026-09-17: collections are named sets with their own public page at `/work/<slug>` (title, description, cover, ordered photos); the Work page lists collections plus the all-photos grid. A photo may belong to many collections, each with its own order. The public pages are built in the public-site phase; phase 4b builds the model and the admin. Photo gains the back-relations `collections CollectionPhoto[]` and `coverOf Collection[] @relation("CollectionCover")`.
 
 ### Bulk actions and reorder (phase 4b)
 

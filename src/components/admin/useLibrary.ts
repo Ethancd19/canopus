@@ -2,20 +2,39 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  bulkPhotos,
   deletePhoto,
   listPhotos,
   patchPhoto,
+  type BulkPhotosPayload,
+  type BulkPhotosResult,
   type DeletePhotoResult,
   type PatchPhotoInput,
   type PatchPhotoResult,
   type Photo,
   type PhotoFormat,
 } from "@/lib/admin-api";
+import type { BulkAction } from "@/lib/bulk";
 import { TAG_OPTIONS } from "@/lib/tagging";
 
 export type FormatFilter = "all" | PhotoFormat;
 export type StateFilter = "all" | "drafts" | "published" | "featured" | "untagged";
 export type LibraryView = "grid" | "list";
+export type BulkMessage = { tone: "ok" | "error"; text: string };
+
+const BULK_ACTION_LABELS: Record<BulkAction, { verb: string; infinitive: string }> = {
+  publish: { verb: "Published", infinitive: "publish" },
+  unpublish: { verb: "Unpublished", infinitive: "unpublish" },
+  addTag: { verb: "Tagged", infinitive: "add tag" },
+  removeTag: { verb: "Untagged", infinitive: "remove tag" },
+  addToCollection: { verb: "Added", infinitive: "add to collection" },
+  removeFromCollection: { verb: "Removed", infinitive: "remove from collection" },
+  delete: { verb: "Deleted", infinitive: "delete" },
+};
+
+function plural(count: number) {
+  return count === 1 ? "photo" : "photos";
+}
 
 const VIEW_KEY = "canopus.admin.view";
 
@@ -66,6 +85,25 @@ export function useLibrary() {
     };
   }, []);
 
+  // Selection lives outside `photos` entirely - it tracks ids, not rows, so
+  // it survives an optimistic update to an unrelated field. `selectionEpoch`
+  // increments every time the selection is cleared (explicit Clear, or a
+  // successful bulk action) so a consumer can `key` the bulk bar on it and
+  // get a fresh mount - resetting its own pending inputs/confirm state -
+  // exactly when the count drops to zero.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectionEpoch, setSelectionEpoch] = useState(0);
+  const [bulkMessage, setBulkMessage] = useState<BulkMessage | null>(null);
+  const lastSelectedRef = useRef<string | null>(null);
+
+  const clearBulkMessage = useCallback(() => setBulkMessage(null), []);
+
+  const clearSelection = useCallback(() => {
+    setSelected(new Set());
+    lastSelectedRef.current = null;
+    setSelectionEpoch((n) => n + 1);
+  }, []);
+
   // Split so the mount effect never calls setState synchronously in its own
   // body (only after the `await` below, once the fetch resolves) - `reload`
   // is called from a click handler instead, where that restriction doesn't
@@ -76,6 +114,14 @@ export function useLibrary() {
     if (result.ok) {
       setPhotos(result.photos);
       setError(null);
+      // Drop any selected id that no longer exists in the loaded set (e.g.
+      // deleted server-side between reloads) - otherwise `selected.size`
+      // stays inflated with dead ids and the bulk bar shows a stale count.
+      const validIds = new Set(result.photos.map((p) => p.id));
+      setSelected((current) => {
+        const next = new Set([...current].filter((id) => validIds.has(id)));
+        return next.size === current.size ? current : next;
+      });
     } else {
       setError(result.error || "Couldn't load photos.");
     }
@@ -116,6 +162,64 @@ export function useLibrary() {
     });
   }, [photos, search, format, state]);
 
+  // `filteredRef` mirrors `filtered` (same ref pattern as `photosRef`) so
+  // shift-range selection can read the on-screen order without depending on
+  // (and re-creating) `toggleSelected` every time the filter changes.
+  const filteredRef = useRef<Photo[]>(filtered);
+  useEffect(() => {
+    filteredRef.current = filtered;
+  }, [filtered]);
+
+  const toggleSelected = useCallback((id: string, opts: { range?: boolean } = {}) => {
+    // A fresh selection edit supersedes whatever the last bulk action said.
+    setBulkMessage(null);
+    setSelected((current) => {
+      const anchor = lastSelectedRef.current;
+      if (opts.range && anchor) {
+        const ids = filteredRef.current.map((p) => p.id);
+        const from = ids.indexOf(anchor);
+        const to = ids.indexOf(id);
+        if (from !== -1 && to !== -1) {
+          const [start, end] = from < to ? [from, to] : [to, from];
+          const next = new Set(current);
+          for (let i = start; i <= end; i++) next.add(ids[i]);
+          lastSelectedRef.current = id;
+          return next;
+        }
+      }
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      lastSelectedRef.current = id;
+      return next;
+    });
+  }, []);
+
+  const selectAllFiltered = useCallback(() => {
+    setBulkMessage(null);
+    setSelected(new Set(filteredRef.current.map((p) => p.id)));
+  }, []);
+
+  const bulk = useCallback(
+    async (action: BulkAction, payload?: BulkPhotosPayload): Promise<BulkPhotosResult> => {
+      const ids = [...selected];
+      const result = await bulkPhotos(ids, action, payload);
+      const labels = BULK_ACTION_LABELS[action];
+      if (result.ok) {
+        await reload();
+        clearSelection();
+        setBulkMessage({ tone: "ok", text: `${labels.verb} ${result.count} ${plural(result.count)}` });
+      } else {
+        setBulkMessage({ tone: "error", text: `Couldn't ${labels.infinitive}: ${result.error}` });
+      }
+      return result;
+    },
+    [selected, reload, clearSelection],
+  );
+
   const allTags = useMemo(() => {
     const set = new Set<string>(TAG_OPTIONS);
     for (const photo of photos) {
@@ -144,7 +248,16 @@ export function useLibrary() {
     const previous = previousIndex === -1 ? undefined : photosRef.current[previousIndex];
     setPhotos((current) => current.filter((p) => p.id !== id));
     const result = await deletePhoto(id);
-    if (!result.ok && previous) {
+    if (result.ok) {
+      // Drop the deleted id from the selection too - it can no longer be
+      // acted on, and leaving it in would inflate the bulk bar's count.
+      setSelected((current) => {
+        if (!current.has(id)) return current;
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    } else if (previous) {
       setPhotos((current) => {
         const next = [...current];
         next.splice(Math.min(previousIndex, next.length), 0, previous);
@@ -191,5 +304,13 @@ export function useLibrary() {
     remove,
     togglePublished,
     toggleFeatured,
+    selected,
+    toggleSelected,
+    selectAllFiltered,
+    clearSelection,
+    selectionEpoch,
+    bulk,
+    bulkMessage,
+    clearBulkMessage,
   };
 }

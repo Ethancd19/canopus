@@ -139,6 +139,12 @@ The Worker keeps serving on workers.dev throughout.
 ## Day-to-day
 
 - Deploy a change: `npm run deploy`.
+- Database migrations: run `npx prisma migrate deploy` from your machine
+  (it reads `DATABASE_URL` from `.env.local`). An additive migration (new
+  tables or nullable columns, like `20260917200000_collections`) is safe to
+  apply before the deploy that uses it. A destructive migration (dropping or
+  renaming a column) must wait until AFTER the Worker that no longer reads
+  that column is deployed, or the live site will 500 until the deploy lands.
 - Rotate a secret: `npx wrangler secret put NAME`, then `npm run deploy` is
   not needed; secrets apply immediately.
 - Local Worker preview with real bindings: copy `.dev.vars.example` to

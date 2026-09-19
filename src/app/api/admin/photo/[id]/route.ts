@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { apiError, apiOk, handleRouteError } from "@/lib/api";
 import { requireAdmin } from "@/lib/require-admin";
 import { pickPhotoFields } from "@/lib/photo-fields";
+import { isSlugConflict } from "@/lib/slug";
 import { getEnv } from "@/lib/cloudflare";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -11,13 +12,19 @@ export async function PATCH(request: Request, { params }: Ctx) {
   if (denied) return denied;
   try {
     const { id } = await params;
-    const data = pickPhotoFields(await request.json());
+    const { data, invalid } = pickPhotoFields(await request.json());
+    if (invalid.length > 0) return apiError(`Invalid fields: ${invalid.join(", ")}`, 400);
     if (Object.keys(data).length === 0) return apiError("no editable fields in body", 400);
-    const photo = await db.photo.update({
-      where: { id },
-      data: data as Parameters<typeof db.photo.update>[0]["data"],
-    });
-    return apiOk({ photo });
+    try {
+      const photo = await db.photo.update({
+        where: { id },
+        data: data as Parameters<typeof db.photo.update>[0]["data"],
+      });
+      return apiOk({ photo });
+    } catch (err) {
+      if (isSlugConflict(err)) return apiError("That slug is already in use.", 409);
+      throw err;
+    }
   } catch (err) {
     return handleRouteError(err);
   }

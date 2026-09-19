@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { TagInput } from "@/components/ui/TagInput";
 import { Toggle } from "@/components/ui/Toggle";
+import { Button } from "@/components/ui/Button";
+import { slugify } from "@/lib/slug";
 import type { PatchPhotoInput, Photo, PhotoFormat } from "@/lib/admin-api";
 
 type Props = {
@@ -44,6 +46,7 @@ export function PhotoFields({ photo, onChange, suggestions }: Props) {
   const uid = useId();
 
   const title = useCommitOnBlur(photo.title, (value) => onChange({ title: value }));
+  const slug = useCommitOnBlur(photo.slug, (value) => onChange({ slug: value }));
   const location = useCommitOnBlur(photo.location ?? "", (value) => onChange({ location: value }));
   const caption = useCommitOnBlur(photo.caption ?? "", (value) => onChange({ caption: value }));
   const camera = useCommitOnBlur(photo.camera ?? "", (value) => onChange({ camera: value }));
@@ -75,7 +78,19 @@ export function PhotoFields({ photo, onChange, suggestions }: Props) {
         <Field label="Title" htmlFor={`${uid}-title`}>
           <Input {...textField<HTMLInputElement>(title, `${uid}-title`)} />
         </Field>
-        <p className="font-mono text-[11px] text-faint">/{photo.slug}</p>
+        <Field label="Slug" htmlFor={`${uid}-slug`}>
+          <div className="flex items-center gap-2">
+            <Input {...textField<HTMLInputElement>(slug, `${uid}-slug`)} />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onChange({ slug: slugify(title.value) })}
+            >
+              Regenerate from title
+            </Button>
+          </div>
+        </Field>
       </div>
 
       <Field label="Tags" htmlFor={`${uid}-tags`}>

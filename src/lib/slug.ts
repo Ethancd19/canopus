@@ -15,6 +15,13 @@ export function slugify(input: string): string {
   return slug || "untitled";
 }
 
+/** True for a Prisma unique-constraint violation on the `slug` column. */
+export function isSlugConflict(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const e = err as { code?: unknown; meta?: { target?: unknown } };
+  return e.code === "P2002" && Array.isArray(e.meta?.target) && e.meta.target.includes("slug");
+}
+
 const MAX_ATTEMPTS = 50;
 
 /**

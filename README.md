@@ -43,9 +43,11 @@ The test scripts pass `--no-deprecation` to hide Node's DEP0205 warning emitted 
 
 - `/admin/login` is public. Everything else under `/admin` requires a session. Sign out is in the sidebar.
 - Every `/api/admin/*` route returns `401 { ok: false, error: "unauthorized" }` without a session.
-- Two pages:
-  - **Library** (`/admin`): Search, filter, and browse the photo grid. Edit captions and tags in a drawer. Publish, unpublish, or delete photos.
-  - **Upload** (`/admin/upload`): Drop a batch of photos, view EXIF data, add AI-suggested tags with inline edits. Photos land as unpublished drafts by default; publish per photo or all at once.
+- Four pages:
+  - **Library** (`/admin`): Search, filter, and browse the photo grid. Edit captions, tags, and the slug in a drawer, copy a photo's image URL, press Cmd/Ctrl+S to save, or Cmd/Ctrl+Enter to publish. Select photos (shift-click for a range, or "Select all") to publish, unpublish, tag, add to a collection, or delete them in bulk.
+  - **Upload** (`/admin/upload`): Drop a batch of photos, view EXIF data, add AI-suggested tags with inline edits. Tag suggestions include every tag already used in the library. Photos land as unpublished drafts by default; publish per photo or all at once.
+  - **Featured order** (`/admin/featured`): Drag featured photos into the order they appear on the home page, then save.
+  - **Collections** (`/admin/collections`): Named sets of photos, each with its own slug for a public page at `/work/<slug>` (public pages arrive in phase 5). Create a collection, edit its title and description, pick a cover, drag members into order, add photos from the library, and publish it when ready. A photo can belong to many collections.
 - Drafts are visible only in the library, not on public pages. Publish photos before they appear on `/work` or `/`.
 - The footer on every public page links to `/admin`.
 - Uploads go to Cloudflare R2 and are served from `/img/<key>?w=<width>`; see the walkthrough's Storage section.

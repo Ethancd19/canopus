@@ -60,6 +60,39 @@ describe("/api/admin/photo/[id]", () => {
     expect(update).not.toHaveBeenCalled();
   });
 
+  it("PATCH rejects a body with invalid-typed fields, listing them by name", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    const res = await PATCH(patchReq({ published: "yes", order: "nope" }), { params });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ ok: false, error: "Invalid fields: order, published" });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("PATCH rejects a slug that is not already slugified", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    const res = await PATCH(patchReq({ slug: "Not A Slug" }), { params });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ ok: false, error: "Invalid fields: slug" });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("PATCH returns 409 with a friendly message when the slug is already taken", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    update.mockRejectedValue({ code: "P2002", meta: { target: ["slug"] } });
+    const res = await PATCH(patchReq({ slug: "taken" }), { params });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ ok: false, error: "That slug is already in use." });
+  });
+
+  it("PATCH rethrows a non-slug update error", async () => {
+    mockedAuth.mockResolvedValue({ user: { name: "Ethan" } } as never);
+    update.mockRejectedValue(new Error("db down"));
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await PATCH(patchReq({ title: "x" }), { params });
+    expect(res.status).toBe(500);
+    errSpy.mockRestore();
+  });
+
   it("DELETE rejects unauthenticated requests", async () => {
     mockedAuth.mockResolvedValue(null as never);
     const res = await DELETE(new Request("http://localhost"), { params });
