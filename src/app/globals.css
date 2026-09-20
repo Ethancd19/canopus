@@ -41,19 +41,8 @@
   --border-light: rgba(42, 58, 74, 0.12);
   --font-serif: "Cormorant Garamond", serif;
   --font-mono: "DM Mono", monospace;
-  --gallery-cols: 3;
 }
 
-@media (max-width: 1024px) {
-  :root {
-    --gallery-cols: 2;
-  }
-}
-@media (max-width: 640px) {
-  :root {
-    --gallery-cols: 1;
-  }
-}
 
 @layer base {
   *,

@@ -3,7 +3,9 @@
 import { motion } from "motion/react";
 import { Photo } from "@/types/photo";
 import { PhotoCard } from "@/components/gallery/PhotoCard";
-import { GALLERY_BREAKPOINTS as B, GALLERY_COLUMNS as C, GALLERY_GAP } from "@/lib/gallery-layout";
+import { GALLERY_GAP } from "@/lib/gallery-layout";
+import { useColumnCount } from "@/components/gallery/useColumnCount";
+import { distributeMasonry } from "@/lib/masonry";
 
 export function GalleryGrid({
   photos,
@@ -12,17 +14,22 @@ export function GalleryGrid({
   photos: Photo[];
   onOpen: (index: number, el: HTMLElement) => void;
 }) {
+  const columns = useColumnCount();
+  const cols = distributeMasonry(photos, columns);
+
   return (
-    <motion.div key="grid" layout style={{ columns: `var(--gallery-cols, ${C.desktop})`, columnGap: GALLERY_GAP }}>
+    <motion.div key="grid" layout style={{ display: "flex", gap: GALLERY_GAP, alignItems: "flex-start" }}>
       <style>{`
-        @media (min-width: ${B.wide}px)   { :root { --gallery-cols: ${C.wide}; } }
-        @media (max-width: ${B.tablet}px) { :root { --gallery-cols: ${C.tablet}; } }
-        @media (max-width: ${B.phone}px)  { :root { --gallery-cols: ${C.phone}; } }
         [data-photo-card]:focus-visible { outline: 1px solid rgba(212,220,232,0.35); outline-offset: 2px; }
       `}</style>
-      {photos.map((photo, i) => (
-        <div key={photo.id} style={{ marginBottom: GALLERY_GAP, breakInside: "avoid" }}>
-          <PhotoCard photo={photo} index={i} onClick={(p, el) => onOpen(i, el)} />
+      {cols.map((column, colIndex) => (
+        <div
+          key={colIndex}
+          style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: GALLERY_GAP }}
+        >
+          {column.map(({ item: photo, index }) => (
+            <PhotoCard key={photo.id} photo={photo} index={index} onClick={(p, el) => onOpen(index, el)} />
+          ))}
         </div>
       ))}
     </motion.div>
