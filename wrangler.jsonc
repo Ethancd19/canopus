@@ -23,9 +23,8 @@
 			"bucket_name": "canopus-photos"
 		},
 		{
-			"bucket_name": "canopus-photos",
-			"binding": "canopus_photos",
-			"remote": true
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "canopus-cache"
 		}
 	],
 	"images": {

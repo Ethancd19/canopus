@@ -1,8 +1,11 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
+import memoryQueue from "@opennextjs/cloudflare/overrides/queue/memory-queue";
 
-// No incremental cache, tag cache, or queue yet. Data pages are dynamic
-// (`revalidate = 0`); prerendered pages (/behind, /contact,
-// /canopus-is-watching, /admin/login) are rendered by the Worker on each
-// request until the R2 incremental cache is added with on-demand revalidation
-// in the public-site phase.
-export default defineCloudflareConfig({});
+// Static public pages (`revalidate = 60`) are stored in R2 and refreshed in the
+// background by the memory queue, which re-requests the page through the
+// WORKER_SELF_REFERENCE binding. No tag cache: there is no on-demand purge yet.
+export default defineCloudflareConfig({
+  incrementalCache: r2IncrementalCache,
+  queue: memoryQueue,
+});

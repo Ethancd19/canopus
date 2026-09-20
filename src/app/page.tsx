@@ -1,13 +1,10 @@
-import { db } from "@/lib/db";
+import { getFeaturedPhotos } from "@/lib/public-queries";
 import HomeClient from "@/components/HomeClient";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function Home() {
-  const photos = await db.photo.findMany({
-    where: { featured: true, published: true },
-    orderBy: { order: "asc" },
-  });
+  const photos = await getFeaturedPhotos();
 
   return <HomeClient photos={photos} />;
 }

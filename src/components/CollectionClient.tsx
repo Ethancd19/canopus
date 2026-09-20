@@ -1,20 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "motion/react";
 import Nav from "@/components/Nav";
 import Gallery from "@/components/gallery/Gallery";
-import { CollectionStrip } from "@/components/CollectionStrip";
 import { Footer } from "@/components/Footer";
-import { Photo } from "@/types/photo";
-import type { PublicCollectionSummary } from "@/lib/public-queries";
+import type { PublicCollection } from "@/lib/public-queries";
 
-export default function WorkClient({
-  photos,
-  collections,
-}: {
-  photos: Photo[];
-  collections: PublicCollectionSummary[];
-}) {
+export default function CollectionClient({ collection }: { collection: PublicCollection }) {
   return (
     <div style={{ background: "#0E1824", minHeight: "100vh" }}>
       <Nav visible={true} />
@@ -30,6 +23,22 @@ export default function WorkClient({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
+          <Link
+            href="/work"
+            style={{
+              display: "inline-block",
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "rgba(212,220,232,0.6)",
+              textDecoration: "none",
+              marginBottom: "1.5rem",
+            }}
+          >
+            ← All work
+          </Link>
+
           <p
             style={{
               fontFamily: "var(--font-mono)",
@@ -41,7 +50,7 @@ export default function WorkClient({
               marginBottom: "0.5rem",
             }}
           >
-            All work
+            Collection
           </p>
 
           <h1
@@ -55,16 +64,26 @@ export default function WorkClient({
               lineHeight: 1,
             }}
           >
-            Archive
+            {collection.title}
           </h1>
 
-          {collections.length > 0 && (
-            <div style={{ marginBottom: "3rem" }}>
-              <CollectionStrip collections={collections} />
-            </div>
+          {collection.description && (
+            <p
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.15rem",
+                fontWeight: 300,
+                fontStyle: "italic",
+                color: "rgba(212,220,232,0.6)",
+                maxWidth: "60ch",
+                marginBottom: "3rem",
+              }}
+            >
+              {collection.description}
+            </p>
           )}
 
-          <Gallery photos={photos} />
+          <Gallery photos={collection.photos} showFilters={false} />
         </motion.div>
       </section>
 

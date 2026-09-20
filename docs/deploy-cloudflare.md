@@ -1,8 +1,10 @@
 # Deploying Canopus to Cloudflare Workers
 
 The site runs as one Cloudflare Worker built by `@opennextjs/cloudflare`.
-Static files ship as assets; every page and API route is rendered by the Worker
-(no page cache yet). Images are served from Cloudflare R2.
+Static files ship as assets. The public pages (`/`, `/work`, `/work/<slug>`)
+are cached in R2 and refreshed in the background (section 8); the admin and
+the API routes are rendered by the Worker on every request. Images are served
+from Cloudflare R2.
 
 You need: the Cloudflare account that holds the `bycanopus.com` zone (Workers
 Paid plan), Node 24+, and the values currently in Vercel's environment
@@ -129,6 +131,24 @@ Do these once, in order.
 
 Local development: `next dev` and `npm run preview` use a local, empty R2 simulation, so new test uploads only exist on your machine.
 
+## 8. Page cache bucket
+
+`/`, `/work`, and `/work/<slug>` are static pages (`revalidate = 60`) cached in
+R2 via `@opennextjs/cloudflare`'s incremental cache. Create the bucket once,
+the same way as the photos bucket: dashboard → R2 → Create bucket → name it
+exactly `canopus-cache` → no public access, no custom domain. Then:
+
+```bash
+npm run deploy
+```
+
+Local preview needs no bucket: `npm run preview` uses a local R2 simulation.
+
+The build now queries the database: `npm run build`, `npm run build:cf`, and
+`npm run deploy` prerender `/` and `/work` and list the published collection
+slugs, so `DATABASE_URL` in `.env.local` must be reachable when you build. A
+missing or wrong connection string fails the build instead of the site.
+
 ## Rollback
 
 If something is wrong after step 5: comment the `routes` block back out and
@@ -152,3 +172,5 @@ The Worker keeps serving on workers.dev throughout.
 - Regular development stays `npm run dev`.
 - Secrets never live in `.env.local` for the deployed site; `npm run deploy`
   strips non-public values from the bundle.
+- Public pages are cached and refresh within 60 seconds of a change; the
+  admin is never cached.

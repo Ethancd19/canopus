@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
-import Gallery from "@/components/Gallery";
+import { HomeHero } from "@/components/HomeHero";
+import Gallery from "@/components/gallery/Gallery";
 import { Footer } from "@/components/Footer";
 import { Photo } from "@/types/photo";
 
@@ -70,21 +71,7 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
           overflow: "hidden",
         }}
       >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: introPhase === "image" || introPhase === "done" ? 0.6 : 0,
-          }}
-          transition={{ duration: 2.5, ease: "easeInOut" }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: "url(/intro.jpg)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            willChange: "opacity",
-          }}
-        />
+        <HomeHero visible={introPhase === "image" || introPhase === "done"} />
         <div
           style={{
             position: "absolute",

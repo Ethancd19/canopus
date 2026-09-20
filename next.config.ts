@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "*": ["./node_modules/next/dist/compiled/@vercel/og/*.wasm"],
   },
+  images: {
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
+    // Mirror the widths /img serves so next/image never asks for another.
+    deviceSizes: [640, 960, 1280, 1920, 2560],
+    imageSizes: [320],
+    qualities: [80],
+  },
 };
 
 export default nextConfig;

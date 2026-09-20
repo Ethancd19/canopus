@@ -77,4 +77,5 @@ model CollectionPhoto {
   collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   photo        Photo      @relation(fields: [photoId], references: [id], onDelete: Cascade)
   @@id([collectionId, photoId])
+  @@index([collectionId, order])
 }

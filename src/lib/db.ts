@@ -4,7 +4,9 @@ import { PrismaNeonHttp } from "@prisma/adapter-neon";
 // Neon over HTTP: every query is one fetch, so a single client is safe to
 // share across Workers requests (no sockets are held between requests).
 // Interactive transactions are not supported over HTTP; the app does not
-// use them. Any page that reads `db` must be dynamic.
+// use them. Pages that read `db` may be static with `revalidate` because the
+// client reads `process.env.DATABASE_URL`, which is present at build time and
+// at runtime.
 let client: PrismaClient | undefined;
 
 function getClient(): PrismaClient {

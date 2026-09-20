@@ -170,12 +170,18 @@ Decided 2026-09-17: collections are named sets with their own public page at `/w
 
 ## Public site
 
-Final phase, after the storage and admin work ships:
+Final phase, after the storage and admin work ships. Decided with the owner on 2026-09-19.
 
-- `next/image` with the custom loader, `sizes` derived from the gallery column count, blur placeholders from the database.
-- `Gallery.tsx` split into `gallery/GalleryGrid.tsx`, `gallery/GalleryFilters.tsx`, `gallery/Lightbox.tsx`, `gallery/EmptyState.tsx` (keeps the existing messages), and `gallery/useGalleryFilter.ts`.
-- Home and Work pages become static with on-demand revalidation instead of `revalidate = 0`.
-- Visual evolutions are proposed at that point using the frontend-design skill and approved before implementation. Candidates: keyboard navigation and swipe in the lightbox, a photo detail panel that uses the EXIF and film fields already stored, aspect-aware masonry, and a film-grain treatment for film-format shots.
+**Binding rule:** photos are only ever resized and encoded (as the `/img` route already does). No crop, filter, overlay, grain, or colour treatment on any page. The masonry gallery keeps true aspect ratios, the reveal animation, and the hover zoom the owner likes.
+
+- **Hero.** `public/intro.jpg` (16 MB) is served raw today. A script (`scripts/hero-variants.mts`, `sharp` dev dependency, run by hand) writes AVIF, WebP, and JPEG variants at 1280, 1920, and 2560 px into `public/hero/`, committed. `HomeClient` renders them with a `<picture>` element (`object-fit: cover`, centre) in place of the CSS background image; the fade-in and overlay are unchanged.
+- **`next/image`.** `images.loader = "custom"` with `src/lib/image-loader.ts` mapping to `/img/<storageKey>?w=<width>`; `deviceSizes` `[640, 960, 1280, 1920, 2560]`, `imageSizes` `[320]`, `qualities` `[80]` so the component only ever asks for the six widths the route serves. Tiles pass `sizes` derived from the column count, `placeholder="blur"` from `blurDataUrl`, and the stored `width`/`height`. The lightbox keeps a plain `<img>` at 1920.
+- **Gallery split.** `src/components/Gallery.tsx` becomes `src/components/gallery/`: `Gallery.tsx` (composition, `showFilters` prop), `GalleryGrid.tsx`, `PhotoCard.tsx`, `GalleryFilters.tsx`, `EmptyState.tsx` (same messages), `Lightbox.tsx`, `useGalleryFilter.ts`, `constants.ts`. `HomeClient` and `WorkClient` import from the new path. The lint error at the old line 586 is removed by giving the empty-state message a deterministic first value and randomising only on filter changes.
+- **Tile refinements (approved).** Four columns at and above 1600 px, three below, two at and below 1024 px, one at and below 640 px. Gaps 6 px (column gap and vertical). Hover zoom unchanged.
+- **Lightbox.** Previous/next via arrow keys, on-screen arrows, and touch swipe (horizontal pointer drag over 60 px); Escape closes; the neighbouring images are preloaded; `role="dialog"` with `aria-modal`; body scroll locked while open; focus returns to the opening tile; tiles are keyboard-operable (`role="button"`, `tabIndex`, Enter/Space). `useReducedMotion` zeroes the reveal and lightbox transition durations.
+- **Collections public.** `/work` shows a strip of published collections above the gallery: each cover at its natural aspect ratio inside a fixed-height row (no crop), serif title, mono photo count, linking to `/work/<slug>`. Cover falls back to the first member photo. `/work/<slug>` renders title, description, and the collection's published photos in collection order in the same gallery without filters; unknown or unpublished slugs return 404; `generateMetadata` sets the title. Queries live in `src/lib/public-queries.ts`. Additive migration adds `@@index([collectionId, order])` on `CollectionPhoto`.
+- **Static pages with background refresh.** `/`, `/work`, and `/work/[slug]` use `revalidate = 60` (`generateStaticParams` lists published slugs; `dynamicParams = true`). `open-next.config.ts` enables the R2 incremental cache (`NEXT_INC_CACHE_R2_BUCKET` → bucket `canopus-cache`, one dashboard step in the walkthrough) and the memory queue (uses the existing `WORKER_SELF_REFERENCE`). A publish in the admin reaches the public site within a minute. No tag cache or on-demand purge this phase; instant purge (D1 tag cache) is a documented option for later. `next build` prerenders these pages, so it needs `DATABASE_URL` from `.env.local`.
+- **Not in this phase.** Film grain, any per-photo treatment, a separate collections index page, a nav change, sitemap.
 
 ## Cloudflare deployment
 
@@ -226,7 +232,7 @@ Vitest with the Node environment.
 3. Storage: schema step 1, R2 bindings, image route, loader, upload endpoint, migration script and run, schema step 4.
 4a. Admin foundation: Tailwind theme, UI primitives, admin shell + sign out, login restyle, footer link, drafts, upload queue that creates rows, library rebuild, Cloudinary cleanup (schema step 4). Remove old admin pages.
 4b. Admin power: bulk actions, featured drag-reorder, collections, quality-of-life features.
-5. Public site: `next/image` adoption, Gallery split, static pages with revalidation, then approved visual evolutions.
+5. Public site (implemented 2026-09-19, awaiting the owner's deploy): hero variants, `next/image` adoption, Gallery split with approved tile refinements, lightbox navigation, public collections, static pages with background refresh. (Plan: `docs/superpowers/plans/2026-09-19-phase5-public-site.md`.)
 
 Each phase is a separate branch and pull request. Work is delegated to cheaper models per task with orchestrator review before merge.
 

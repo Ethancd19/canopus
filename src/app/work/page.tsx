@@ -1,13 +1,13 @@
-import { db } from "@/lib/db";
+import { getPublishedPhotos, getPublishedCollections } from "@/lib/public-queries";
 import WorkClient from "@/components/WorkClient";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function WorkPage() {
-  const photos = await db.photo.findMany({
-    where: { published: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [photos, collections] = await Promise.all([
+    getPublishedPhotos(),
+    getPublishedCollections(),
+  ]);
 
-  return <WorkClient photos={photos} />;
+  return <WorkClient photos={photos} collections={collections} />;
 }

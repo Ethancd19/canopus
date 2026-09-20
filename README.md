@@ -47,15 +47,27 @@ The test scripts pass `--no-deprecation` to hide Node's DEP0205 warning emitted 
   - **Library** (`/admin`): Search, filter, and browse the photo grid. Edit captions, tags, and the slug in a drawer, copy a photo's image URL, press Cmd/Ctrl+S to save, or Cmd/Ctrl+Enter to publish. Select photos (shift-click for a range, or "Select all") to publish, unpublish, tag, add to a collection, or delete them in bulk.
   - **Upload** (`/admin/upload`): Drop a batch of photos, view EXIF data, add AI-suggested tags with inline edits. Tag suggestions include every tag already used in the library. Photos land as unpublished drafts by default; publish per photo or all at once.
   - **Featured order** (`/admin/featured`): Drag featured photos into the order they appear on the home page, then save.
-  - **Collections** (`/admin/collections`): Named sets of photos, each with its own slug for a public page at `/work/<slug>` (public pages arrive in phase 5). Create a collection, edit its title and description, pick a cover, drag members into order, add photos from the library, and publish it when ready. A photo can belong to many collections.
+  - **Collections** (`/admin/collections`): Named sets of photos, each with its own slug for a public page at `/work/<slug>`. Create a collection, edit its title and description, pick a cover, drag members into order, add photos from the library, and publish it when ready. A photo can belong to many collections.
 - Drafts are visible only in the library, not on public pages. Publish photos before they appear on `/work` or `/`.
 - The footer on every public page links to `/admin`.
 - Uploads go to Cloudflare R2 and are served from `/img/<key>?w=<width>`; see the walkthrough's Storage section.
+
+## Public site
+
+- **Home** (`/`) shows the featured photos in the order set on `/admin/featured`. The hero image is served from `public/hero/` in AVIF, WebP, and JPEG at three widths; regenerate them after replacing the source file `assets/intro.jpg` with `npm run hero` (the source is not served; only the variants are).
+- **Work** (`/work`) lists every published photo in a tiled masonry that keeps each photo's aspect ratio (four columns on wide screens, then three, two, one). Published collections appear in a strip above the grid.
+- **Collections** (`/work/<slug>`) show one collection's photos in the order set in the admin, with its description. Unpublished collections return 404.
+- **Lightbox**: click or press Enter on a tile; arrow keys, on-screen arrows, or a swipe move between photos; Escape closes.
+- Photos are only ever resized and encoded on the way out (`/img/<key>?w=`); nothing crops, filters, or overlays them.
+- The gallery code lives in `src/components/gallery/`; public data access in `src/lib/public-queries.ts`.
+- Public pages are static and refresh within 60 seconds of a change in the admin. `next build` renders them, so it needs `DATABASE_URL` in `.env.local`.
 
 ## Deploy
 
 The site runs on Cloudflare Workers. See `docs/deploy-cloudflare.md` for
 secrets, first deploy, DNS cutover, and rollback. Day-to-day: `npm run deploy`.
+Public pages are cached in the `canopus-cache` R2 bucket and refresh in the
+background; see "8. Page cache bucket" in the deploy doc.
 
 ## Design docs
 
