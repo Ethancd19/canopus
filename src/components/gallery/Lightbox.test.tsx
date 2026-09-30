@@ -15,7 +15,8 @@ it("shows the indexed photo, navigates with the next button, and restores focus 
   const opener = document.createElement("button");
   document.body.appendChild(opener);
   const { unmount } = render(<Lightbox photos={photos} index={0} onClose={onClose} onNavigate={onNavigate} returnFocusTo={opener} />);
-  expect(screen.getByRole("dialog", { name: "Dunes" })).toBeInTheDocument();
+  expect(screen.getByRole("dialog", { name: "Digital photograph by Ethan Duval" })).toBeInTheDocument();
+  expect(screen.queryByText("Dunes")).not.toBeInTheDocument();
   expect(document.body.style.overflow).toBe("hidden");
   fireEvent.click(screen.getByRole("button", { name: "Next photo" }));
   expect(onNavigate).toHaveBeenCalledWith(1);
@@ -31,7 +32,7 @@ it("moves focus into the dialog on mount and traps Tab within it", () => {
   document.body.appendChild(opener);
   render(<Lightbox photos={photos} index={0} onClose={onClose} onNavigate={onNavigate} returnFocusTo={opener} />);
 
-  const dialog = screen.getByRole("dialog", { name: "Dunes" });
+  const dialog = screen.getByRole("dialog", { name: "Digital photograph by Ethan Duval" });
   expect(document.activeElement).not.toBe(document.body);
   expect(dialog.contains(document.activeElement)).toBe(true);
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent }
 import { motion, useReducedMotion } from "motion/react";
 import { Photo } from "@/types/photo";
 import { photoSrc } from "@/lib/photo-url";
+import { photoAlt } from "@/lib/photo-alt";
 import { useLightboxNavigation } from "@/components/gallery/useLightboxNavigation";
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -93,7 +94,7 @@ function LightboxImage({
       )}
       <img
         src={photoSrc(photo, 1920)}
-        alt={photo.title}
+        alt={photoAlt(photo)}
         onLoad={() => setLoaded(true)}
         style={{
           maxHeight: "88vh",
@@ -181,7 +182,7 @@ export function Lightbox({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label={photo.title}
+      aria-label={photoAlt(photo)}
       style={{
         position: "fixed",
         inset: 0,
@@ -235,20 +236,8 @@ export function Lightbox({
             background: "#111F2E",
           }}
         >
-          <div>
-            <h2
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "22px",
-                fontWeight: 300,
-                color: "#D4DCE8",
-                marginBottom: "0.4rem",
-                lineHeight: 1.2,
-              }}
-            >
-              {photo.title}
-            </h2>
-            {photo.location && (
+          {photo.location && (
+            <div>
               <p
                 style={{
                   fontFamily: "var(--font-mono)",
@@ -260,8 +249,8 @@ export function Lightbox({
               >
                 {photo.location}
               </p>
-            )}
-          </div>
+            </div>
+          )}
           {photo.caption && (
             <p
               style={{

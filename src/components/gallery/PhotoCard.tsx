@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Photo } from "@/types/photo";
 import { FORMAT_LABELS } from "@/components/gallery/constants";
 import { ExifBar } from "@/components/gallery/ExifBar";
+import { photoAlt } from "@/lib/photo-alt";
 import imageLoader from "@/lib/image-loader";
 import { GALLERY_SIZES } from "@/lib/gallery-layout";
 
@@ -33,7 +34,7 @@ export function PhotoCard({
       data-photo-card
       role="button"
       tabIndex={0}
-      aria-label={`Open ${photo.title}`}
+      aria-label={`Open ${photoAlt(photo)}`}
       onClick={(e) => onClick(photo, e.currentTarget)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -58,7 +59,7 @@ export function PhotoCard({
         <Image
           loader={imageLoader}
           src={photo.storageKey}
-          alt={photo.title}
+          alt={photoAlt(photo)}
           width={photo.width}
           height={photo.height}
           sizes={GALLERY_SIZES}

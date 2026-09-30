@@ -1,5 +1,8 @@
 import ContactClient from "@/components/ContactClient";
 
-export default function ContactPage() {
-  return <ContactClient />;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function ContactPage({ searchParams }: { searchParams: SearchParams }) {
+  const { subject } = await searchParams;
+  return <ContactClient initialSubject={typeof subject === "string" ? subject : undefined} />;
 }

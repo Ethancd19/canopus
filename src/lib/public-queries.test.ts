@@ -11,8 +11,10 @@ import {
   getPublishedCollection,
   getPublishedCollections,
   getPublishedPhotos,
+  getSportsGenres,
   PUBLIC_PHOTO_SELECT,
 } from "@/lib/public-queries";
+import { SPORTS_GENRES } from "@/lib/site";
 
 const photo = (id: string, published = true) => ({ id, title: id, slug: id, storageKey: `photos/${id}.jpg`, blurDataUrl: null,
   format: "DIGITAL", tags: [], width: 3, height: 2, aspectRatio: 1.5, location: null, caption: null, camera: null, lens: null,
@@ -87,6 +89,34 @@ describe("getPublishedCollection", () => {
           where: { photo: { published: true } },
           orderBy: { order: "asc" },
         }),
+      }),
+    }));
+  });
+});
+
+describe("getSportsGenres", () => {
+  it("returns every configured genre in order, marking missing collections as empty", async () => {
+    db.collection.findMany.mockResolvedValue([
+      { id: "c2", slug: "live", title: "Live nights", description: "d", cover: photo("x"), photos: [{ photo: photo("m") }], _count: { photos: 4 } },
+      { id: "c1", slug: "sports", title: "Sports", description: null, cover: photo("y", false), photos: [{ photo: photo("m") }], _count: { photos: 1 } },
+    ]);
+    const result = await getSportsGenres();
+    expect(result.map((g) => [g.slug, g.title, g.count, g.cover?.id ?? null, g.description])).toEqual([
+      ["sports", "Sports", 1, "m", null],
+      ["motorsport", "Motorsport", 0, null, null],
+      ["live", "Live", 4, "x", "d"],
+    ]);
+    expect(result.map((g) => g.blurb)).toEqual(SPORTS_GENRES.map((g) => g.blurb));
+    expect("published" in (result[2].cover as object)).toBe(false);
+  });
+
+  it("queries only the configured slugs, published, with a published cover and first member", async () => {
+    db.collection.findMany.mockResolvedValue([]);
+    await getSportsGenres();
+    expect(db.collection.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { slug: { in: ["sports", "motorsport", "live"] }, published: true },
+      include: expect.objectContaining({
+        photos: expect.objectContaining({ take: 1, where: { photo: { published: true } }, orderBy: { order: "asc" } }),
       }),
     }));
   });

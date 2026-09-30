@@ -13,8 +13,9 @@ it("renders a link per collection with title, count, and the cover at its own as
   const link = screen.getByRole("link", { name: /Coast/ });
   expect(link).toHaveAttribute("href", "/work/coast");
   expect(screen.getByText("12 photos")).toBeInTheDocument();
-  expect(screen.getByAltText("Dunes")).toHaveAttribute("width", "3000");
-  expect(screen.getByAltText("Dunes")).toHaveAttribute("sizes", "330px");
+  expect(screen.getByAltText("Digital photograph by Ethan Duval")).toHaveAttribute("width", "3000");
+  expect(screen.getByAltText("Digital photograph by Ethan Duval")).toHaveAttribute("sizes", "330px");
+  expect(screen.queryByText("Dunes")).not.toBeInTheDocument();
   expect(screen.getByText("Empty")).toBeInTheDocument();
 });
 

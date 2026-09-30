@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { PolarisMarkIcon } from "@/components/PolarisMark";
+import { SPORTS_PATH } from "@/lib/site";
 
 const LINKS = [
   { label: "Work", href: "/work" },
+  { label: "Events", href: SPORTS_PATH },
   { label: "Behind", href: "/behind" },
   { label: "Contact", href: "/contact" },
 ];

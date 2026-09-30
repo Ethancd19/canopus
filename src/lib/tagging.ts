@@ -3,6 +3,8 @@ export const TAG_OPTIONS = [
   "astro",
   "architecture",
   "sports",
+  "motorsport",
+  "live",
   "underwater",
   "street",
   "portrait",

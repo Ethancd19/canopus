@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import { HomeHero } from "@/components/HomeHero";
 import Gallery from "@/components/gallery/Gallery";
 import { Footer } from "@/components/Footer";
 import { Photo } from "@/types/photo";
+import { SPORTS_PATH } from "@/lib/site";
 
 export default function HomeClient({ photos }: { photos: Photo[] }) {
   const router = useRouter();
@@ -236,6 +238,23 @@ export default function HomeClient({ photos }: { photos: Photo[] }) {
           </p>
 
           <Gallery photos={photos} theme="light" />
+
+          <p
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "10px",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+              color: "rgba(42,58,74,0.6)",
+              textAlign: "center",
+              marginTop: "3rem",
+            }}
+          >
+            Looking for sports, motorsport or live events?{" "}
+            <Link href={SPORTS_PATH} style={{ color: "#B87333", textDecoration: "none" }}>
+              See Sports &amp; Events →
+            </Link>
+          </p>
         </motion.div>
       </section>
 

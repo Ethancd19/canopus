@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SPORTS_PATH } from "@/lib/site";
 
 const PALETTES = {
   dark: {
@@ -36,14 +37,14 @@ export function Footer({ tone = "dark" }: { tone?: "dark" | "light" }) {
         <Link href="/work" style={linkStyle}>
           Work
         </Link>
+        <Link href={SPORTS_PATH} style={linkStyle}>
+          Events
+        </Link>
         <Link href="/behind" style={linkStyle}>
           Behind
         </Link>
         <Link href="/contact" style={linkStyle}>
           Contact
-        </Link>
-        <Link href="/admin" style={{ ...linkStyle, opacity: 0.4 }}>
-          Admin
         </Link>
       </div>
     </footer>

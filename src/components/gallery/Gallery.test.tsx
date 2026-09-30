@@ -33,10 +33,12 @@ it("renders a tile per photo with a snapped /img src and opens the lightbox on E
   render(<Gallery photos={photos} />);
   const tiles = screen.getAllByRole("button", { name: /^Open / });
   expect(tiles).toHaveLength(2);
-  expect(screen.getByAltText("Dunes").getAttribute("src")).toMatch(/^\/img\/photos\/a\.jpg\?w=\d+$/);
+  expect(screen.getByAltText("Digital photograph by Ethan Duval").getAttribute("src")).toMatch(/^\/img\/photos\/a\.jpg\?w=\d+$/);
   fireEvent.keyDown(tiles[1], { key: "Enter" });
   expect(screen.getByRole("dialog")).toBeInTheDocument();
-  expect(screen.getByRole("heading", { name: "Rain" })).toBeInTheDocument();
+  expect(screen.queryByText("Dunes")).not.toBeInTheDocument();
+  expect(screen.queryByText("Rain")).not.toBeInTheDocument();
+  expect(screen.queryByRole("heading")).not.toBeInTheDocument();
 });
 
 it("hides the filter bar when showFilters is false", () => {

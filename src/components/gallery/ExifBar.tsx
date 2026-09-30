@@ -24,6 +24,12 @@ function MiniExif({ value }: { value: string }) {
 
 export function ExifBar({ photo }: { photo: Photo }) {
   const isFilm = photo.format !== "DIGITAL";
+  const exifValues = isFilm
+    ? [photo.camera, photo.filmStock]
+    : [photo.camera, photo.focalLength, photo.aperture, photo.shutterSpeed, photo.iso];
+  const hasExif = exifValues.some((v) => Boolean(v));
+  if (!hasExif && !photo.location) return null;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -51,44 +57,35 @@ export function ExifBar({ photo }: { photo: Photo }) {
           flexWrap: "wrap",
         }}
       >
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--font-serif)",
-              fontSize: "13px",
-              fontWeight: 300,
-              color: "#D4DCE8",
-              lineHeight: 1,
-            }}
-          >
-            {photo.title}
-          </span>
+        {hasExif && (
           <div
-            style={{
-              display: "flex",
-              gap: "0.75rem",
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
+            style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}
           >
-            {!isFilm ? (
-              <>
-                {photo.camera && <MiniExif value={photo.camera} />}
-                {photo.focalLength && <MiniExif value={photo.focalLength} />}
-                {photo.aperture && <MiniExif value={`f/${photo.aperture}`} />}
-                {photo.shutterSpeed && <MiniExif value={photo.shutterSpeed} />}
-                {photo.iso && <MiniExif value={`ISO ${photo.iso}`} />}
-              </>
-            ) : (
-              <>
-                {photo.camera && <MiniExif value={photo.camera} />}
-                {photo.filmStock && <MiniExif value={photo.filmStock} />}
-              </>
-            )}
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {!isFilm ? (
+                <>
+                  {photo.camera && <MiniExif value={photo.camera} />}
+                  {photo.focalLength && <MiniExif value={photo.focalLength} />}
+                  {photo.aperture && <MiniExif value={`f/${photo.aperture}`} />}
+                  {photo.shutterSpeed && <MiniExif value={photo.shutterSpeed} />}
+                  {photo.iso && <MiniExif value={`ISO ${photo.iso}`} />}
+                </>
+              ) : (
+                <>
+                  {photo.camera && <MiniExif value={photo.camera} />}
+                  {photo.filmStock && <MiniExif value={photo.filmStock} />}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         {photo.location && (
           <span
             style={{

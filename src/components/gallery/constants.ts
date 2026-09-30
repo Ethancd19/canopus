@@ -13,6 +13,8 @@ export const ALL_GENRES = [
   "Astro",
   "Architecture",
   "Sports",
+  "Motorsport",
+  "Live",
   "Underwater",
   "Street",
   "Portrait",

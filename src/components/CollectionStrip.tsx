@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
 import imageLoader from "@/lib/image-loader";
+import { photoAlt } from "@/lib/photo-alt";
 import type { PublicCollectionSummary } from "@/lib/public-queries";
 
 const ROW_HEIGHT = "clamp(140px, 22vw, 220px)";
@@ -53,7 +54,7 @@ export function CollectionStrip({ collections }: { collections: PublicCollection
                 <Image
                   loader={imageLoader}
                   src={collection.cover.storageKey}
-                  alt={collection.cover.title}
+                  alt={photoAlt(collection.cover)}
                   width={collection.cover.width}
                   height={collection.cover.height}
                   sizes={`${Math.ceil(220 * collection.cover.aspectRatio)}px`}

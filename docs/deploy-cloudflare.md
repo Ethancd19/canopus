@@ -1,7 +1,7 @@
 # Deploying Canopus to Cloudflare Workers
 
 The site runs as one Cloudflare Worker built by `@opennextjs/cloudflare`.
-Static files ship as assets. The public pages (`/`, `/work`, `/work/<slug>`)
+Static files ship as assets. The public pages (`/`, `/work`, `/work/<slug>`, `/events`, `/events/<genre>`)
 are cached in R2 and refreshed in the background (section 8); the admin and
 the API routes are rendered by the Worker on every request. Images are served
 from Cloudflare R2.

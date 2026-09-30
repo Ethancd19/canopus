@@ -10,6 +10,7 @@ import {
 import { ScrambleText } from "motion-plus/react";
 import Nav from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { SITE_EMAIL, CREDENTIAL_LINE, BOOKING_SUBJECT } from "@/lib/site";
 
 type FormState = "idle" | "sending" | "sent" | "error";
 
@@ -345,19 +346,25 @@ const inputStyle: React.CSSProperties = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ContactClient() {
+const SUBJECTS = [
+  BOOKING_SUBJECT,
+  "Just saying hi",
+  "General inquiry",
+  "Collaboration",
+  "Print / licensing",
+];
+
+/** `initialSubject` preselects a pill when it exactly matches one (e.g. from `/contact?subject=`). */
+export default function ContactClient({ initialSubject }: { initialSubject?: string }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useState(
+    initialSubject && SUBJECTS.includes(initialSubject) ? initialSubject : "",
+  );
   const [message, setMessage] = useState("");
   const [formState, setFormState] = useState<FormState>("idle");
 
-  const subjects = [
-    "Just saying hi",
-    "General inquiry",
-    "Collaboration",
-    "Print / licensing",
-  ];
+  const subjects = SUBJECTS;
 
   const handleSubmit = async () => {
     if (!name || !email || !message) return;
@@ -495,6 +502,33 @@ export default function ContactClient() {
                       <br />
                       something.
                     </h1>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-serif)",
+                        fontStyle: "italic",
+                        fontSize: "14px",
+                        color: "rgba(212,220,232,0.65)",
+                        lineHeight: 1.6,
+                        maxWidth: "46ch",
+                        marginTop: "0.85rem",
+                      }}
+                    >
+                      {CREDENTIAL_LINE}
+                    </p>
+                    <a
+                      href={`mailto:${SITE_EMAIL}`}
+                      style={{
+                        display: "inline-block",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        letterSpacing: "0.1em",
+                        color: "#C9A96E",
+                        marginTop: "0.5rem",
+                        textDecoration: "none",
+                      }}
+                    >
+                      {SITE_EMAIL}
+                    </a>
                   </motion.div>
 
                   {/* Subject pills */}
